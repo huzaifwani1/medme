@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const QRCode = require('qrcode');
@@ -14,41 +13,41 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const dbDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir);
-const db = new Database(path.join(dbDir, 'medme.db'));
+const dbFile = path.join(dbDir, 'data.json');
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, role TEXT, email TEXT UNIQUE, password TEXT, name TEXT);
-  CREATE TABLE IF NOT EXISTS patients (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE, dob TEXT, gender TEXT, blood_group TEXT, height TEXT, weight TEXT, bmi TEXT, address TEXT, phone TEXT, emergency_contact TEXT, allergies TEXT, vaccinations TEXT, insurance TEXT, qr_code TEXT);
-  CREATE TABLE IF NOT EXISTS doctors (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE, specialization TEXT, qualification TEXT, experience TEXT, hospital_affiliation TEXT, photo TEXT);
-  CREATE TABLE IF NOT EXISTS medical_records (id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id INTEGER, doctor_id INTEGER, date TEXT, type TEXT, diagnosis TEXT, notes TEXT);
-  CREATE TABLE IF NOT EXISTS prescriptions (id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id INTEGER, doctor_id INTEGER, date TEXT, medication TEXT, dosage TEXT, frequency TEXT, duration TEXT, instructions TEXT, follow_up_date TEXT);
-  CREATE TABLE IF NOT EXISTS lab_reports (id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id INTEGER, doctor_id INTEGER, date TEXT, type TEXT, result TEXT, file_url TEXT);
-  CREATE TABLE IF NOT EXISTS appointments (id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id INTEGER, doctor_id INTEGER, date TEXT, time TEXT, status TEXT);
-  CREATE TABLE IF NOT EXISTS family_members (id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id INTEGER, name TEXT, relation TEXT, condition TEXT);
-  CREATE TABLE IF NOT EXISTS activity_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, action TEXT, time TEXT);
-  CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, message TEXT, date TEXT);
-`);
+let db = { users: [], patients: [], doctors: [], medical_records: [], prescriptions: [], lab_reports: [], appointments: [], family_members: [], activity_logs: [], notifications: [] };
+
+function loadDb() {
+  if (fs.existsSync(dbFile)) {
+    try { db = JSON.parse(fs.readFileSync(dbFile, 'utf8')); } catch (e) {}
+  } else { saveDb(); }
+}
+function saveDb() { fs.writeFileSync(dbFile, JSON.stringify(db, null, 2)); }
+function nextId(table) { return db[table].length > 0 ? Math.max(...db[table].map(i => i.id)) + 1 : 1; }
+
+loadDb();
 
 const SECRET = 'medme_secret_key_123_university_prototype';
 
 function logActivity(action) {
   const time = new Date().toLocaleString('en-US', { hour12: true, dateStyle: 'short', timeStyle: 'short' });
-  db.prepare('INSERT INTO activity_logs (action, time) VALUES (?, ?)').run(action, time);
+  db.activity_logs.push({ id: nextId('activity_logs'), action, time });
+  saveDb();
 }
 
-function notifyUser(userId, message) {
+function notifyUser(user_id, message) {
   const date = new Date().toLocaleString('en-US', { hour12: true, dateStyle: 'short', timeStyle: 'short' });
-  db.prepare('INSERT INTO notifications (user_id, message, date) VALUES (?, ?, ?)').run(userId, message, date);
+  db.notifications.push({ id: nextId('notifications'), user_id, message, date });
+  saveDb();
 }
 
 async function seedDemoData() {
-  const count = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
-  if (count === 0) {
-    console.log("Seeding COMPLETE HEALTHCARE ECOSYSTEM demo data...");
+  if (db.users.length === 0) {
+    console.log("Seeding JSON-BASED HEALTHCARE ECOSYSTEM demo data...");
     const hash = bcrypt.hashSync('password', 10);
     const hashAdmin = bcrypt.hashSync('admin123', 10);
     
-    db.prepare('INSERT INTO users (role, email, password, name) VALUES (?, ?, ?, ?)').run('admin', 'admin@medme.com', hashAdmin, 'System Admin');
+    db.users.push({ id: nextId('users'), role: 'admin', email: 'admin@medme.com', password: hashAdmin, name: 'System Admin' });
 
     // DOCTORS
     const docs = [
@@ -58,9 +57,10 @@ async function seedDemoData() {
     ];
     const docIds = [];
     for(let d of docs) {
-      const info = db.prepare('INSERT INTO users (role, email, password, name) VALUES (?, ?, ?, ?)').run('doctor', d.email, hash, d.name);
-      db.prepare('INSERT INTO doctors (user_id, specialization, qualification, experience, hospital_affiliation, photo) VALUES (?, ?, ?, ?, ?, ?)').run(info.lastInsertRowid, d.spec, d.qual, d.exp, d.hosp, 'https://ui-avatars.com/api/?name='+encodeURIComponent(d.name)+'&background=2563eb&color=fff');
-      docIds.push(info.lastInsertRowid);
+      const uId = nextId('users');
+      db.users.push({ id: uId, role: 'doctor', email: d.email, password: hash, name: d.name });
+      db.doctors.push({ id: nextId('doctors'), user_id: uId, specialization: d.spec, qualification: d.qual, experience: d.exp, hospital_affiliation: d.hosp, photo: 'https://ui-avatars.com/api/?name='+encodeURIComponent(d.name)+'&background=2563eb&color=fff' });
+      docIds.push(uId);
     }
 
     // PATIENTS
@@ -73,10 +73,10 @@ async function seedDemoData() {
     ];
     const patIds = [];
     for(let p of pats) {
-      const info = db.prepare('INSERT INTO users (role, email, password, name) VALUES (?, ?, ?, ?)').run('patient', p.email, hash, p.name);
-      const uId = info.lastInsertRowid;
+      const uId = nextId('users');
+      db.users.push({ id: uId, role: 'patient', email: p.email, password: hash, name: p.name });
       const qrCode = await QRCode.toDataURL(JSON.stringify({ patient_id: uId }));
-      db.prepare('INSERT INTO patients (user_id, dob, gender, blood_group, height, weight, bmi, address, phone, emergency_contact, allergies, vaccinations, insurance, qr_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(uId, p.dob, p.gender, p.blood, p.ht, p.wt, p.bmi, p.add, p.phone, p.emg, p.all, p.vac, p.ins, qrCode);
+      db.patients.push({ id: nextId('patients'), user_id: uId, dob: p.dob, gender: p.gender, blood_group: p.blood, height: p.ht, weight: p.wt, bmi: p.bmi, address: p.add, phone: p.phone, emergency_contact: p.emg, allergies: p.all, vaccinations: p.vac, insurance: p.ins, qr_code: qrCode });
       patIds.push(uId);
     }
 
@@ -88,39 +88,40 @@ async function seedDemoData() {
       {name: 'Fatima Khan', relation: 'Mother', condition: 'Healthy'},
       {name: 'Ayaan Khan', relation: 'Self', condition: 'Pre-Diabetes'}
     ];
-    for(let f of familyData) db.prepare('INSERT INTO family_members (patient_id, name, relation, condition) VALUES (?, ?, ?, ?)').run(patIds[0], f.name, f.relation, f.condition);
+    for(let f of familyData) db.family_members.push({ id: nextId('family_members'), patient_id: patIds[0], name: f.name, relation: f.relation, condition: f.condition });
 
     // RECORDS
     const dates = ['2026-05-01', '2026-05-15', '2026-06-02'];
-    db.prepare('INSERT INTO medical_records (patient_id, doctor_id, date, type, diagnosis, notes) VALUES (?, ?, ?, ?, ?, ?)').run(patIds[0], docIds[0], dates[0], 'General Checkup', 'Viral Fever', 'Patient reported mild fever and fatigue. Prescribed rest and paracetamol.');
-    db.prepare('INSERT INTO medical_records (patient_id, doctor_id, date, type, diagnosis, notes) VALUES (?, ?, ?, ?, ?, ?)').run(patIds[0], docIds[2], dates[1], 'Specialist Visit', 'Pre-Diabetes Screening', 'HbA1c levels slightly elevated. Prescribed lifestyle changes and Metformin.');
-    db.prepare('INSERT INTO medical_records (patient_id, doctor_id, date, type, diagnosis, notes) VALUES (?, ?, ?, ?, ?, ?)').run(patIds[0], docIds[0], dates[2], 'Surgery', 'Appendectomy', 'Minor surgical intervention. Recovery is smooth.');
+    db.medical_records.push({ id: nextId('medical_records'), patient_id: patIds[0], doctor_id: docIds[0], date: dates[0], type: 'General Checkup', diagnosis: 'Viral Fever', notes: 'Patient reported mild fever. Prescribed rest.' });
+    db.medical_records.push({ id: nextId('medical_records'), patient_id: patIds[0], doctor_id: docIds[2], date: dates[1], type: 'Specialist Visit', diagnosis: 'Pre-Diabetes Screening', notes: 'HbA1c levels slightly elevated. Prescribed lifestyle changes and Metformin.' });
+    db.medical_records.push({ id: nextId('medical_records'), patient_id: patIds[0], doctor_id: docIds[0], date: dates[2], type: 'Surgery', diagnosis: 'Appendectomy', notes: 'Minor surgical intervention. Recovery is smooth.' });
 
     // PRESCRIPTIONS
-    db.prepare('INSERT INTO prescriptions (patient_id, doctor_id, date, medication, dosage, frequency, duration, instructions, follow_up_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(patIds[0], docIds[2], dates[1], 'Metformin', '500mg', 'Twice a day', '3 Months', '1 tablet daily after dinner', '2026-09-15');
-    db.prepare('INSERT INTO prescriptions (patient_id, doctor_id, date, medication, dosage, frequency, duration, instructions, follow_up_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(patIds[0], docIds[0], dates[0], 'Paracetamol', '650mg', 'As needed', '5 Days', 'Take after meals for fever', 'None');
+    db.prescriptions.push({ id: nextId('prescriptions'), patient_id: patIds[0], doctor_id: docIds[2], date: dates[1], medication: 'Metformin', dosage: '500mg', frequency: 'Twice a day', duration: '3 Months', instructions: '1 tablet daily after dinner', follow_up_date: '2026-09-15' });
+    db.prescriptions.push({ id: nextId('prescriptions'), patient_id: patIds[0], doctor_id: docIds[0], date: dates[0], medication: 'Paracetamol', dosage: '650mg', frequency: 'As needed', duration: '5 Days', instructions: 'Take after meals for fever', follow_up_date: 'None' });
 
     // LAB REPORTS
-    db.prepare('INSERT INTO lab_reports (patient_id, doctor_id, date, type, result, file_url) VALUES (?, ?, ?, ?, ?, ?)').run(patIds[0], docIds[0], dates[0], 'CBC Blood Test', 'WBC slightly elevated (11,000/mcL). Indicates mild infection.', 'report_cbc.pdf');
-    db.prepare('INSERT INTO lab_reports (patient_id, doctor_id, date, type, result, file_url) VALUES (?, ?, ?, ?, ?, ?)').run(patIds[0], docIds[2], dates[1], 'HbA1c Sugar Test', 'Result: 5.9% (Pre-diabetic range)', 'report_hba1c.pdf');
-    db.prepare('INSERT INTO lab_reports (patient_id, doctor_id, date, type, result, file_url) VALUES (?, ?, ?, ?, ?, ?)').run(patIds[0], docIds[1], dates[2], 'ECG Report', 'Normal Sinus Rhythm', 'report_ecg.pdf');
+    db.lab_reports.push({ id: nextId('lab_reports'), patient_id: patIds[0], doctor_id: docIds[0], date: dates[0], type: 'CBC Blood Test', result: 'WBC slightly elevated (11,000/mcL). Indicates mild infection.', file_url: 'report_cbc.pdf' });
+    db.lab_reports.push({ id: nextId('lab_reports'), patient_id: patIds[0], doctor_id: docIds[2], date: dates[1], type: 'HbA1c Sugar Test', result: 'Result: 5.9% (Pre-diabetic range)', file_url: 'report_hba1c.pdf' });
+    db.lab_reports.push({ id: nextId('lab_reports'), patient_id: patIds[0], doctor_id: docIds[1], date: dates[2], type: 'ECG Report', result: 'Normal Sinus Rhythm', file_url: 'report_ecg.pdf' });
 
     // APPOINTMENTS
-    db.prepare('INSERT INTO appointments (patient_id, doctor_id, date, time, status) VALUES (?, ?, ?, ?, ?)').run(patIds[0], docIds[0], '2026-05-01', '10:00 AM', 'Completed');
-    db.prepare('INSERT INTO appointments (patient_id, doctor_id, date, time, status) VALUES (?, ?, ?, ?, ?)').run(patIds[0], docIds[2], '2026-06-15', '02:30 PM', 'Upcoming');
+    db.appointments.push({ id: nextId('appointments'), patient_id: patIds[0], doctor_id: docIds[0], date: '2026-05-01', time: '10:00 AM', status: 'Completed' });
+    db.appointments.push({ id: nextId('appointments'), patient_id: patIds[0], doctor_id: docIds[2], date: '2026-06-15', time: '02:30 PM', status: 'Upcoming' });
 
-    // NOTIFICATIONS
+    saveDb();
+    
+    // NOTIFICATIONS & ACTIVITY (these auto-save)
     notifyUser(patIds[0], 'Your HbA1c Lab Report has been uploaded by Dr. Faisal Lone.');
     notifyUser(patIds[0], 'Upcoming Appointment Reminder: Tomorrow at 02:30 PM with Dr. Faisal Lone.');
 
-    // ACTIVITY LOGS
     logActivity('Patient Registered: Sara Khan');
     logActivity('Doctor Login: Dr. Sana Bhat');
     logActivity('QR Scan Completed for Ali Khan');
     logActivity('Lab Report Uploaded: HbA1c');
     logActivity('Prescription Issued: Metformin');
     
-    console.log("Demo data successfully loaded.");
+    console.log("JSON Demo data successfully loaded.");
   }
 }
 seedDemoData();
@@ -134,25 +135,28 @@ const auth = (req, res, next) => {
 app.post('/api/register', async (req, res) => {
   const { role, email, password, name, dob, blood_group, specialization } = req.body;
   try {
+    if (db.users.find(u => u.email === email)) throw new Error('Email already exists');
     const hash = bcrypt.hashSync(password, 10);
-    const info = db.prepare('INSERT INTO users (role, email, password, name) VALUES (?, ?, ?, ?)').run(role, email, hash, name);
-    const userId = info.lastInsertRowid;
+    const userId = nextId('users');
+    db.users.push({ id: userId, role, email, password: hash, name });
+
     if (role === 'patient') {
       const qrData = JSON.stringify({ patient_id: userId });
       const qrCode = await QRCode.toDataURL(qrData);
-      db.prepare('INSERT INTO patients (user_id, dob, blood_group, qr_code) VALUES (?, ?, ?, ?)').run(userId, dob, blood_group, qrCode);
+      db.patients.push({ id: nextId('patients'), user_id: userId, dob, gender: '', blood_group, height: '', weight: '', bmi: '', address: '', phone: '', emergency_contact: '', allergies: '', vaccinations: '', insurance: '', qr_code: qrCode });
       logActivity('Patient Registered: ' + name);
     } else if (role === 'doctor') {
-      db.prepare('INSERT INTO doctors (user_id, specialization) VALUES (?, ?)').run(userId, specialization);
+      db.doctors.push({ id: nextId('doctors'), user_id: userId, specialization, qualification: '', experience: '', hospital_affiliation: '', photo: '' });
       logActivity('Doctor Registered: ' + name);
     }
+    saveDb();
     res.json({ success: true });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  const user = db.users.find(u => u.email === email);
   if (!user || !bcrypt.compareSync(password, user.password)) return res.status(401).json({ error: 'Invalid credentials' });
   const token = jwt.sign({ id: user.id, role: user.role, name: user.name }, SECRET);
   logActivity(user.role==='admin' ? 'Admin Login' : (user.role==='doctor' ? 'Doctor Login: ' : 'Patient Login: ') + user.name);
@@ -160,28 +164,33 @@ app.post('/api/login', (req, res) => {
 });
 
 app.get('/api/me', auth, (req, res) => {
-  const user = db.prepare('SELECT id, role, email, name FROM users WHERE id = ?').get(req.user.id);
-  if (!user) return res.status(404).json({error: 'User not found'});
+  const user = { ...db.users.find(u => u.id === req.user.id) };
+  if (!user.id) return res.status(404).json({error: 'User not found'});
+  delete user.password;
   if (user.role === 'patient') {
-    const p = db.prepare('SELECT qr_code FROM patients WHERE user_id = ?').get(user.id);
-    user.qr_code = p.qr_code;
+    const p = db.patients.find(p => p.user_id === user.id);
+    if(p) user.qr_code = p.qr_code;
   }
   res.json(user);
 });
 
-// Demo Endpoints without Auth
+// Join Helpers
+const getDocName = id => { const d = db.users.find(u=>u.id==id); return d?d.name:'Unknown'; };
+const getPatName = id => { const p = db.users.find(u=>u.id==id); return p?p.name:'Unknown'; };
+
 app.get('/api/view/:type/:id?', (req, res) => {
   const { type, id } = req.params;
+  const numId = parseInt(id);
   try {
     if (type === 'patient') {
-      const u = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(id);
-      const p = db.prepare('SELECT * FROM patients WHERE user_id = ?').get(id);
-      const records = db.prepare('SELECT m.*, d.name as doctor_name FROM medical_records m JOIN users d ON m.doctor_id = d.id WHERE m.patient_id = ? ORDER BY date DESC').all(id);
-      const prescriptions = db.prepare('SELECT p.*, d.name as doctor_name FROM prescriptions p JOIN users d ON p.doctor_id = d.id WHERE p.patient_id = ? ORDER BY date DESC').all(id);
-      const labs = db.prepare('SELECT l.*, d.name as doctor_name FROM lab_reports l JOIN users d ON l.doctor_id = d.id WHERE l.patient_id = ? ORDER BY date DESC').all(id);
-      const appointments = db.prepare('SELECT a.*, d.name as doctor_name FROM appointments a JOIN users d ON a.doctor_id = d.id WHERE a.patient_id = ? ORDER BY date DESC').all(id);
-      const family = db.prepare('SELECT * FROM family_members WHERE patient_id = ?').all(id);
-      const notifications = db.prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY id DESC').all(id);
+      const u = db.users.find(u => u.id === numId);
+      const p = db.patients.find(p => p.user_id === numId);
+      const records = db.medical_records.filter(m => m.patient_id === numId).map(m => ({...m, doctor_name: getDocName(m.doctor_id)})).sort((a,b)=>new Date(b.date)-new Date(a.date));
+      const prescriptions = db.prescriptions.filter(p => p.patient_id === numId).map(p => ({...p, doctor_name: getDocName(p.doctor_id)})).sort((a,b)=>new Date(b.date)-new Date(a.date));
+      const labs = db.lab_reports.filter(l => l.patient_id === numId).map(l => ({...l, doctor_name: getDocName(l.doctor_id)})).sort((a,b)=>new Date(b.date)-new Date(a.date));
+      const appointments = db.appointments.filter(a => a.patient_id === numId).map(a => ({...a, doctor_name: getDocName(a.doctor_id)})).sort((a,b)=>new Date(b.date)-new Date(a.date));
+      const family = db.family_members.filter(f => f.patient_id === numId);
+      const notifications = db.notifications.filter(n => n.user_id === numId).sort((a,b)=>b.id-a.id);
       
       const conditionMap = {};
       family.forEach(f => {
@@ -195,60 +204,77 @@ app.get('/api/view/:type/:id?', (req, res) => {
       res.json({ patient: {...u, ...p}, records, prescriptions, labs, appointments, family, notifications, risks });
     }
     else if (type === 'doctor') {
-      const u = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(id);
-      const d = db.prepare('SELECT * FROM doctors WHERE user_id = ?').get(id);
-      const patientsTreated = db.prepare('SELECT DISTINCT p.id, p.name FROM medical_records m JOIN users p ON m.patient_id = p.id WHERE m.doctor_id = ?').all(id);
-      const prescriptions = db.prepare('SELECT p.*, pat.name as patient_name FROM prescriptions p JOIN users pat ON p.patient_id = pat.id WHERE p.doctor_id = ?').all(id);
-      const appointments = db.prepare('SELECT a.*, p.name as patient_name FROM appointments a JOIN users p ON a.patient_id = p.id WHERE a.doctor_id = ? ORDER BY date DESC').all(id);
+      const u = db.users.find(u => u.id === numId);
+      const d = db.doctors.find(d => d.user_id === numId);
+      const patientsTreatedIds = [...new Set(db.medical_records.filter(m => m.doctor_id === numId).map(m => m.patient_id))];
+      const patientsTreated = db.users.filter(u => patientsTreatedIds.includes(u.id));
+      const prescriptions = db.prescriptions.filter(p => p.doctor_id === numId).map(p => ({...p, patient_name: getPatName(p.patient_id)}));
+      const appointments = db.appointments.filter(a => a.doctor_id === numId).map(a => ({...a, patient_name: getPatName(a.patient_id)})).sort((a,b)=>new Date(b.date)-new Date(a.date));
       res.json({ doctor: {...u, ...d}, patientsTreated, prescriptions, appointments });
     }
     else if (type === 'record') {
-      const r = db.prepare('SELECT m.*, pat.name as patient_name, doc.name as doctor_name FROM medical_records m JOIN users pat ON m.patient_id = pat.id JOIN users doc ON m.doctor_id = doc.id WHERE m.id = ?').get(id);
-      res.json({ record: r });
+      const r = db.medical_records.find(m => m.id === numId);
+      res.json({ record: r ? {...r, patient_name: getPatName(r.patient_id), doctor_name: getDocName(r.doctor_id)} : null });
     }
     else if (type === 'prescription') {
-      const p = db.prepare('SELECT p.*, pat.name as patient_name, doc.name as doctor_name FROM prescriptions p JOIN users pat ON p.patient_id = pat.id JOIN users doc ON p.doctor_id = doc.id WHERE p.id = ?').get(id);
-      res.json({ prescription: p });
+      const p = db.prescriptions.find(p => p.id === numId);
+      res.json({ prescription: p ? {...p, patient_name: getPatName(p.patient_id), doctor_name: getDocName(p.doctor_id)} : null });
     }
     else if (type === 'lab') {
-      const l = db.prepare('SELECT l.*, pat.name as patient_name, doc.name as doctor_name FROM lab_reports l JOIN users pat ON l.patient_id = pat.id JOIN users doc ON l.doctor_id = doc.id WHERE l.id = ?').get(id);
-      res.json({ lab: l });
+      const l = db.lab_reports.find(l => l.id === numId);
+      res.json({ lab: l ? {...l, patient_name: getPatName(l.patient_id), doctor_name: getDocName(l.doctor_id)} : null });
     }
     else if (type === 'activity') {
-      const a = db.prepare('SELECT * FROM activity_logs WHERE id = ?').get(id);
-      res.json({ activity: a });
+      res.json({ activity: db.activity_logs.find(a => a.id === numId) });
     }
-    else if (type === 'all_patients') res.json({ list: db.prepare('SELECT u.id, u.name, u.email, p.dob, p.blood_group FROM patients p JOIN users u ON p.user_id = u.id').all() });
-    else if (type === 'all_doctors') res.json({ list: db.prepare('SELECT u.id, u.name, u.email, d.specialization FROM doctors d JOIN users u ON d.user_id = u.id').all() });
-    else if (type === 'all_records') res.json({ list: db.prepare('SELECT m.*, pat.name as patient_name, doc.name as doctor_name FROM medical_records m JOIN users pat ON m.patient_id = pat.id JOIN users doc ON m.doctor_id = doc.id').all() });
-    else if (type === 'all_prescriptions') res.json({ list: db.prepare('SELECT p.*, pat.name as patient_name, doc.name as doctor_name FROM prescriptions p JOIN users pat ON p.patient_id = pat.id JOIN users doc ON p.doctor_id = doc.id').all() });
-    else if (type === 'all_scans') res.json({ list: db.prepare("SELECT * FROM activity_logs WHERE action LIKE '%QR Scan%'").all() });
+    else if (type === 'all_patients') {
+      const list = db.patients.map(p => { const u = db.users.find(u=>u.id===p.user_id); return { id: u.id, name: u.name, email: u.email, dob: p.dob, blood_group: p.blood_group }; });
+      res.json({ list });
+    }
+    else if (type === 'all_doctors') {
+      const list = db.doctors.map(d => { const u = db.users.find(u=>u.id===d.user_id); return { id: u.id, name: u.name, email: u.email, specialization: d.specialization }; });
+      res.json({ list });
+    }
+    else if (type === 'all_records') {
+      const list = db.medical_records.map(m => ({ ...m, patient_name: getPatName(m.patient_id), doctor_name: getDocName(m.doctor_id) }));
+      res.json({ list });
+    }
+    else if (type === 'all_prescriptions') {
+      const list = db.prescriptions.map(p => ({ ...p, patient_name: getPatName(p.patient_id), doctor_name: getDocName(p.doctor_id) }));
+      res.json({ list });
+    }
+    else if (type === 'all_scans') {
+      const list = db.activity_logs.filter(a => a.action.includes('QR Scan'));
+      res.json({ list });
+    }
     else res.status(404).json({error: 'Type not found'});
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
 app.get('/api/demo-data', (req, res) => {
-  const patients = db.prepare('SELECT u.id, u.name, u.email, p.dob, p.blood_group FROM patients p JOIN users u ON p.user_id = u.id').all();
-  const doctors = db.prepare('SELECT u.id, u.name, u.email, d.specialization FROM doctors d JOIN users u ON d.user_id = u.id').all();
-  const prescriptions = db.prepare('SELECT p.*, pat.name as patient_name, doc.name as doctor_name FROM prescriptions p JOIN users pat ON p.patient_id = pat.id JOIN users doc ON p.doctor_id = doc.id').all();
-  const family_trees = db.prepare('SELECT f.*, u.name as patient_name FROM family_members f JOIN users u ON f.patient_id = u.id').all();
+  const patients = db.patients.map(p => { const u = db.users.find(u=>u.id===p.user_id); return { id: u.id, name: u.name, email: u.email, dob: p.dob, blood_group: p.blood_group }; });
+  const doctors = db.doctors.map(d => { const u = db.users.find(u=>u.id===d.user_id); return { id: u.id, name: u.name, email: u.email, specialization: d.specialization }; });
+  const prescriptions = db.prescriptions.map(p => ({ ...p, patient_name: getPatName(p.patient_id), doctor_name: getDocName(p.doctor_id) }));
+  const family_trees = db.family_members.map(f => ({ ...f, patient_name: getPatName(f.patient_id) }));
   res.json({ patients, doctors, prescriptions, family_trees });
 });
 
 app.get('/api/analytics', (req, res) => {
-  const fam = db.prepare('SELECT condition FROM family_members WHERE condition != "Healthy" AND condition NOT LIKE "%Observation%"').all();
-  const recs = db.prepare('SELECT diagnosis FROM medical_records').all();
   const diseases = {};
-  fam.forEach(f => { const c = f.condition.trim(); diseases[c] = (diseases[c] || 0) + 1; });
-  recs.forEach(r => { const c = r.diagnosis.trim(); diseases[c] = (diseases[c] || 0) + 1; });
+  db.family_members.forEach(f => {
+    if(f.condition !== 'Healthy' && !f.condition.includes('Observation')) { const c = f.condition.trim(); diseases[c] = (diseases[c] || 0) + 1; }
+  });
+  db.medical_records.forEach(r => { const c = r.diagnosis.trim(); diseases[c] = (diseases[c] || 0) + 1; });
   
-  const docAct = db.prepare('SELECT d.name, COUNT(m.id) as records_count FROM users d LEFT JOIN medical_records m ON d.id = m.doctor_id WHERE d.role="doctor" GROUP BY d.id').all();
+  const docAct = db.users.filter(u=>u.role==='doctor').map(d => {
+    const records_count = db.medical_records.filter(m => m.doctor_id === d.id).length;
+    return { name: d.name, records_count };
+  });
   
-  const pats = db.prepare('SELECT dob, blood_group FROM patients').all();
   const ages = {'0-18':0, '19-35':0, '36-50':0, '51+':0};
   const bloods = {};
   const currentYear = new Date().getFullYear();
-  pats.forEach(p => {
+  db.patients.forEach(p => {
       if(p.dob) {
         const age = currentYear - parseInt(p.dob.split('-')[0]);
         if(age <= 18) ages['0-18']++; else if(age <= 35) ages['19-35']++; else if(age <= 50) ages['36-50']++; else ages['51+']++;
@@ -256,25 +282,57 @@ app.get('/api/analytics', (req, res) => {
       if(p.blood_group) bloods[p.blood_group] = (bloods[p.blood_group] || 0) + 1;
   });
 
-  const medsRaw = db.prepare('SELECT medication FROM prescriptions').all();
   const meds = {};
-  medsRaw.forEach(m => { meds[m.medication] = (meds[m.medication] || 0) + 1; });
+  db.prescriptions.forEach(m => { meds[m.medication] = (meds[m.medication] || 0) + 1; });
 
   res.json({ diseases, docAct, ages, bloods, meds });
 });
 
 app.get('/api/admin/stats', auth, (req, res) => {
   if(req.user.role !== 'admin') return res.status(403).json({error: 'Forbidden'});
-  const patients = db.prepare('SELECT COUNT(*) as c FROM patients').get().c;
-  const doctors = db.prepare('SELECT COUNT(*) as c FROM doctors').get().c;
-  const records = db.prepare('SELECT COUNT(*) as c FROM medical_records').get().c;
-  const prescriptions = db.prepare('SELECT COUNT(*) as c FROM prescriptions').get().c;
-  const labs = db.prepare('SELECT COUNT(*) as c FROM lab_reports').get().c;
-  const qr_scans = db.prepare("SELECT COUNT(*) as c FROM activity_logs WHERE action LIKE '%QR Scan%'").get().c;
-  const users = db.prepare('SELECT id, role, email, name FROM users').all();
-  const activities = db.prepare('SELECT * FROM activity_logs ORDER BY id DESC LIMIT 15').all();
-  res.json({ stats: { patients, doctors, records, prescriptions, labs, qr_scans }, users, activities });
+  const stats = {
+    patients: db.patients.length,
+    doctors: db.doctors.length,
+    records: db.medical_records.length,
+    prescriptions: db.prescriptions.length,
+    labs: db.lab_reports.length,
+    qr_scans: db.activity_logs.filter(a => a.action.includes('QR Scan')).length
+  };
+  const users = db.users.map(u => ({ id: u.id, role: u.role, email: u.email, name: u.name }));
+  const activities = [...db.activity_logs].sort((a,b)=>b.id-a.id).slice(0, 15);
+  res.json({ stats, users, activities });
 });
 
-const PORT = 4000;
-app.listen(PORT, () => { console.log('MedMe Presentation Prototype running on http://localhost:' + PORT); });
+app.post('/api/family', auth, (req, res) => {
+  const { name, relation, condition } = req.body;
+  db.family_members.push({ id: nextId('family_members'), patient_id: req.user.id, name, relation, condition });
+  logActivity('Family Member Added: ' + relation);
+  saveDb();
+  res.json({ success: true });
+});
+
+app.post('/api/records', auth, (req, res) => {
+  const { patient_id, diagnosis, notes } = req.body;
+  const date = new Date().toISOString().split('T')[0];
+  db.medical_records.push({ id: nextId('medical_records'), patient_id, doctor_id: req.user.id, date, type: 'Clinical Visit', diagnosis, notes });
+  logActivity('Medical Record Added for Patient ID: ' + patient_id);
+  saveDb();
+  res.json({ success: true });
+});
+
+app.post('/api/prescriptions', auth, (req, res) => {
+  const { patient_id, medication, instructions } = req.body;
+  const date = new Date().toISOString().split('T')[0];
+  db.prescriptions.push({ id: nextId('prescriptions'), patient_id, doctor_id: req.user.id, date, medication, dosage: '', frequency: '', duration: '', instructions, follow_up_date: '' });
+  logActivity('Prescription Added: ' + medication);
+  saveDb();
+  res.json({ success: true });
+});
+
+app.post('/api/log', auth, (req, res) => {
+  logActivity(req.body.action);
+  res.json({ success: true });
+});
+
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => { console.log('MedMe Presentation Prototype running on port ' + PORT); });
