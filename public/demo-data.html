@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MedMe - Demo Data Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">MedMe Demo Data Viewer</div>
+        <div>
+            <a href="/" class="btn btn-primary">Back to Login</a>
+        </div>
+    </nav>
+
+    <div class="container mt-2">
+        <p class="mb-2 text-muted">This page allows presentation judges to quickly browse all preloaded demo data without logging into individual accounts. <strong>Every row is clickable to view the underlying full record.</strong></p>
+        
+        <div class="grid grid-2">
+            <div class="card">
+                <h3 class="card-header">All Demo Patients</h3>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table id="dPatients">
+                        <thead><tr><th>Name</th><th>Email</th><th>DOB</th><th>Blood</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-header">All Demo Doctors</h3>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table id="dDoctors">
+                        <thead><tr><th>Name</th><th>Email</th><th>Specialization</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-2 mt-2">
+            <div class="card">
+                <h3 class="card-header">All Prescriptions Issued</h3>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table id="dPrescriptions">
+                        <thead><tr><th>Patient</th><th>Doctor</th><th>Medication</th><th>Date</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-header">All Family Tree Links</h3>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table id="dFamily">
+                        <thead><tr><th>Patient Account</th><th>Relative Name</th><th>Relation</th><th>Condition</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/tour.js"></script>
+    <script>
+        async function loadDemoData() {
+            try {
+                const res = await fetch('/api/demo-data');
+                const data = await res.json();
+
+                const pTbody = document.querySelector('#dPatients tbody');
+                pTbody.innerHTML = data.patients.map(p => `<tr class="clickable-row" onclick="window.location.href='/viewer.html?type=patient&id=${p.id}'"><td>${p.name}</td><td>${p.email}</td><td>${p.dob}</td><td>${p.blood_group}</td></tr>`).join('');
+
+                const dTbody = document.querySelector('#dDoctors tbody');
+                dTbody.innerHTML = data.doctors.map(d => `<tr class="clickable-row" onclick="window.location.href='/viewer.html?type=doctor&id=${d.id}'"><td>${d.name}</td><td>${d.email}</td><td>${d.specialization}</td></tr>`).join('');
+
+                const prTbody = document.querySelector('#dPrescriptions tbody');
+                prTbody.innerHTML = data.prescriptions.map(p => `<tr class="clickable-row" onclick="window.location.href='/viewer.html?type=prescription&id=${p.id}'"><td>${p.patient_name}</td><td>${p.doctor_name}</td><td>${p.medication}</td><td>${p.date}</td></tr>`).join('');
+
+                const fTbody = document.querySelector('#dFamily tbody');
+                // Linking family row to the main patient profile where the visual tree resides.
+                fTbody.innerHTML = data.family_trees.map(f => `<tr class="clickable-row" onclick="window.location.href='/viewer.html?type=patient&id=${f.patient_id}'"><td><strong>${f.patient_name}</strong></td><td>${f.name}</td><td>${f.relation}</td><td>${f.condition}</td></tr>`).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        loadDemoData();
+    </script>
+</body>
+</html>

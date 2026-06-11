@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MedMe - Universal Healthcare Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .timeline { border-left: 2px solid var(--primary); padding-left: 20px; position: relative; margin-top: 10px; }
+        .timeline-item { margin-bottom: 20px; position: relative; }
+        .timeline-item::before { content: ''; position: absolute; left: -26px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); border: 2px solid white; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .info-item { background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
+        .info-item label { display: block; font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px; }
+        .info-item span { font-size: 15px; font-weight: 500; color: var(--text-main); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">MedMe Interactive Detail View</div>
+        <div>
+            <button class="btn btn-outline" onclick="window.history.back()">← Go Back</button>
+        </div>
+    </nav>
+    <div class="container mt-2">
+        <div id="contentArea">Loading module data...</div>
+    </div>
+    <script src="/js/auth.js"></script>
+    <script src="/js/tour.js"></script>
+    <script>
+        async function loadView() {
+            const params = new URLSearchParams(window.location.search);
+            const type = params.get('type');
+            const id = params.get('id');
+            const contentArea = document.getElementById('contentArea');
+
+            try {
+                const res = await fetch('/api/view/' + type + (id ? '/' + id : ''));
+                const data = await res.json();
+                if(data.error) throw new Error(data.error);
+                
+                if (type === 'patient') {
+                    const p = data.patient;
+                    contentArea.innerHTML = `
+                        <div class="grid grid-3">
+                            <div class="card text-center" style="border-top: 4px solid var(--primary);">
+                                <img src="${p.qr_code}" style="width: 150px; height: 150px; border: 4px solid var(--primary); border-radius: 8px; margin-bottom: 15px; cursor:pointer;" onclick="window.location.href='/qr-demo.html'">
+                                <h2>${p.name}</h2>
+                                <p class="text-muted">Patient ID: #${p.id}</p>
+                                <span class="badge badge-blue mt-2" style="font-size: 14px;">Blood: ${p.blood_group || 'N/A'}</span>
+                            </div>
+                            <div class="card" style="grid-column: span 2;">
+                                <h3>Health Summary & Vitals</h3>
+                                <div class="info-grid mt-2">
+                                    <div class="info-item"><label>DOB / Age</label><span>${p.dob || 'N/A'}</span></div>
+                                    <div class="info-item"><label>Gender</label><span>${p.gender || 'N/A'}</span></div>
+                                    <div class="info-item"><label>Height / Weight</label><span>${p.height || '--'} / ${p.weight || '--'}</span></div>
+                                    <div class="info-item"><label>BMI</label><span>${p.bmi || '--'}</span></div>
+                                    <div class="info-item"><label>Allergies</label><span style="color:var(--danger);">${p.allergies || 'None'}</span></div>
+                                    <div class="info-item"><label>Insurance</label><span>${p.insurance || 'N/A'}</span></div>
+                                </div>
+                                <h4 class="mt-2" style="margin-bottom: 10px;">Contact Information</h4>
+                                <div class="info-grid">
+                                    <div class="info-item"><label>Phone</label><span>${p.phone || 'N/A'}</span></div>
+                                    <div class="info-item"><label>Email</label><span>${p.email || 'N/A'}</span></div>
+                                    <div class="info-item" style="grid-column: span 2;"><label>Emergency Contact</label><span>${p.emergency_contact || 'N/A'}</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${data.risks.length > 0 ? `
+                        <div class="card mt-2" style="background: #fff1f2; border: 1px solid #fda4af;">
+                            <h3 style="color: #9f1239;">⚠️ Hereditary Risk Analysis</h3>
+                            ${data.risks.map(r => `
+                                <div style="margin-top: 10px;">
+                                    <strong>Risk Flag: ${r.condition}</strong>
+                                    <p style="font-size: 13px; margin: 5px 0;">Triggered by family health tree matches:</p>
+                                    <ul style="font-size: 13px; margin-left: 20px;">
+                                        ${r.members.map(m => `<li>${m} (${r.condition})</li>`).join('')}
+                                    </ul>
+                                </div>
+                            `).join('')}
+                        </div>` : ''}
+
+                        <div class="grid grid-2 mt-2">
+                            <div class="card">
+                                <h3>Medical Documents Center (Labs & Scans)</h3>
+                                <div class="mt-2" style="max-height: 250px; overflow-y: auto;">
+                                    ${data.labs.length === 0 ? '<p class="text-muted">No documents available.</p>' : data.labs.map(l => `
+                                        <div class="clickable-card" style="padding:15px; border:1px solid var(--border); margin-bottom:10px; border-radius:8px; background: #f8fafc;" onclick="window.location.href='/viewer.html?type=lab&id=${l.id}'">
+                                            <strong>📄 ${l.type}</strong><br>
+                                            <span style="font-size: 13px;">Date: ${l.date} | Dr. ${l.doctor_name}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h3>Prescription Management</h3>
+                                <div class="mt-2" style="max-height: 250px; overflow-y: auto;">
+                                    ${data.prescriptions.length === 0 ? '<p class="text-muted">No prescriptions available.</p>' : data.prescriptions.map(p => `
+                                        <div class="clickable-card" style="padding:15px; border:1px solid var(--border); margin-bottom:10px; border-radius:8px; background: #fffbeb; border-color: #fde68a;" onclick="window.location.href='/viewer.html?type=prescription&id=${p.id}'">
+                                            <strong>💊 ${p.medication} (${p.dosage})</strong><br>
+                                            <span style="font-size: 13px;">Frequency: ${p.frequency} | Duration: ${p.duration}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-2">
+                            <h3>Complete Medical History Timeline</h3>
+                            <div class="timeline mt-2" style="max-height: 300px; overflow-y: auto;">
+                                ${data.records.map(r => `
+                                    <div class="timeline-item">
+                                        <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">${r.date}</div>
+                                        <div class="clickable-card" style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid var(--border);" onclick="window.location.href='/viewer.html?type=record&id=${r.id}'">
+                                            <span class="badge" style="background: #e2e8f0; margin-bottom: 5px; display:inline-block;">${r.type || 'Visit'}</span><br>
+                                            <strong style="font-size: 16px;">${r.diagnosis}</strong><br>
+                                            <span style="font-size: 13px; color: var(--text-muted);">Attending Doctor: Dr. ${r.doctor_name}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                else if (type === 'doctor') {
+                    const d = data.doctor;
+                    contentArea.innerHTML = `
+                        <div class="grid grid-3">
+                            <div class="card text-center" style="border-top: 4px solid var(--secondary);">
+                                <img src="${d.photo || 'https://ui-avatars.com/api/?name='+d.name}" style="width: 120px; height: 120px; border-radius: 50%; margin-bottom: 15px;">
+                                <h2>${d.name}</h2>
+                                <p class="text-muted">${d.specialization}</p>
+                            </div>
+                            <div class="card" style="grid-column: span 2;">
+                                <h3>Professional Qualifications</h3>
+                                <div class="info-grid mt-2">
+                                    <div class="info-item"><label>Qualifications</label><span>${d.qualification || 'N/A'}</span></div>
+                                    <div class="info-item"><label>Experience</label><span>${d.experience || 'N/A'}</span></div>
+                                    <div class="info-item" style="grid-column: span 2;"><label>Hospital Affiliation</label><span>${d.hospital_affiliation || 'MedMe Network'}</span></div>
+                                    <div class="info-item"><label>Email Contact</label><span>${d.email}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-2 mt-2">
+                            <div class="card">
+                                <h3>Schedule & Appointments</h3>
+                                <div class="mt-2" style="max-height: 250px; overflow-y: auto;">
+                                    ${data.appointments.map(a => `
+                                        <div style="padding:10px; border-bottom:1px solid #eee;">
+                                            <strong>${a.date} at ${a.time}</strong><br>
+                                            Patient: <a href="/viewer.html?type=patient&id=${a.patient_id}">${a.patient_name}</a>
+                                            <span class="badge" style="float:right; background:${a.status==='Upcoming'?'var(--primary)':'var(--success)'}; color:white;">${a.status}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h3>Patients Treated Directory</h3>
+                                <ul style="list-style:none; padding:0; max-height: 250px; overflow-y: auto;">
+                                    ${data.patientsTreated.map(p => `<li class="clickable-card" style="padding:10px; border-bottom:1px solid #eee;" onclick="window.location.href='/viewer.html?type=patient&id=${p.id}'">👤 ${p.name}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                }
+                else if (type === 'record') {
+                    const r = data.record;
+                    contentArea.innerHTML = `
+                        <div class="card" style="border-left: 4px solid var(--success);">
+                            <h2>Medical Record Deep Dive</h2>
+                            <hr style="margin: 15px 0; border:0; border-top:1px solid var(--border);">
+                            <div class="grid grid-2" style="margin-bottom: 20px;">
+                                <div><p class="text-muted">Patient</p><h3 class="clickable-card" onclick="window.location.href='/viewer.html?type=patient&id=${r.patient_id}'" style="color:var(--primary)">${r.patient_name}</h3></div>
+                                <div><p class="text-muted">Attending Doctor</p><h3 class="clickable-card" onclick="window.location.href='/viewer.html?type=doctor&id=${r.doctor_id}'" style="color:var(--primary)">Dr. ${r.doctor_name}</h3></div>
+                            </div>
+                            <div class="info-grid" style="margin-bottom: 20px;">
+                                <div class="info-item"><label>Date of Record</label><span>${r.date}</span></div>
+                                <div class="info-item"><label>Encounter Type</label><span>${r.type || 'Clinical Visit'}</span></div>
+                            </div>
+                            <div style="background:#f8fafc; padding:20px; border-radius:8px; border: 1px solid var(--border);">
+                                <h3 style="color:var(--text-main); margin-bottom:10px;">🩺 Diagnosis: ${r.diagnosis}</h3>
+                                <p><strong>Clinical Notes & Treatment History:</strong><br><span style="color: #475569; font-size: 15px; display:block; margin-top:10px; line-height:1.6;">${r.notes}</span></p>
+                            </div>
+                        </div>
+                    `;
+                }
+                else if (type === 'prescription') {
+                    const p = data.prescription;
+                    contentArea.innerHTML = `
+                        <div class="card" style="border-left: 4px solid #f59e0b;">
+                            <h2>Prescription Deep Dive</h2>
+                            <hr style="margin: 15px 0; border:0; border-top:1px solid var(--border);">
+                            <div style="background:#fffbeb; border:1px solid #fde68a; padding:20px; border-radius:8px; margin-bottom:20px;">
+                                <h1 style="color:#d97706; margin-bottom:5px;">💊 ${p.medication}</h1>
+                                <div class="info-grid mt-2">
+                                    <div class="info-item" style="background:white;"><label>Dosage</label><span>${p.dosage || 'N/A'}</span></div>
+                                    <div class="info-item" style="background:white;"><label>Frequency</label><span>${p.frequency || 'N/A'}</span></div>
+                                    <div class="info-item" style="background:white;"><label>Duration</label><span>${p.duration || 'N/A'}</span></div>
+                                    <div class="info-item" style="background:white;"><label>Follow-up Date</label><span>${p.follow_up_date || 'None'}</span></div>
+                                </div>
+                                <p style="font-size:16px; color: #92400e; margin-top:15px; padding-top:15px; border-top:1px dashed #fcd34d;"><strong>Instructions:</strong> ${p.instructions}</p>
+                            </div>
+                            <div class="grid grid-2">
+                                <p class="clickable-card" onclick="window.location.href='/viewer.html?type=patient&id=${p.patient_id}'"><strong>Prescribed To:</strong> <br><span style="color:var(--primary); font-size:18px;">${p.patient_name}</span></p>
+                                <p class="clickable-card" onclick="window.location.href='/viewer.html?type=doctor&id=${p.doctor_id}'"><strong>Prescribed By:</strong> <br><span style="color:var(--primary); font-size:18px;">Dr. ${p.doctor_name}</span></p>
+                            </div>
+                        </div>
+                    `;
+                }
+                else if (type === 'lab') {
+                    const l = data.lab;
+                    contentArea.innerHTML = `
+                        <div class="card" style="border-left: 4px solid #8b5cf6;">
+                            <h2>Lab Report & Medical Document</h2>
+                            <hr style="margin: 15px 0; border:0; border-top:1px solid var(--border);">
+                            <div class="grid grid-2" style="margin-bottom: 20px;">
+                                <div><p class="text-muted">Patient</p><h3 class="clickable-card" onclick="window.location.href='/viewer.html?type=patient&id=${l.patient_id}'" style="color:var(--primary)">${l.patient_name}</h3></div>
+                                <div><p class="text-muted">Requested By</p><h3 class="clickable-card" onclick="window.location.href='/viewer.html?type=doctor&id=${l.doctor_id}'" style="color:var(--primary)">Dr. ${l.doctor_name}</h3></div>
+                            </div>
+                            <div style="background:#f5f3ff; border:1px solid #ddd6fe; padding:20px; border-radius:8px;">
+                                <h3 style="color:#6d28d9; margin-bottom:10px;">📄 Document: ${l.type}</h3>
+                                <p><strong>Date:</strong> ${l.date}</p>
+                                <div class="mt-2" style="background:white; padding:15px; border-radius:8px; border:1px dashed #c4b5fd;">
+                                    <strong>Result Summary:</strong><br>
+                                    <span style="font-size:16px; color:#4c1d95; display:block; margin-top:10px;">${l.result}</span>
+                                </div>
+                                <button class="btn mt-2" style="background:#8b5cf6; color:white;">📥 Download Full PDF (${l.file_url})</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                else if (type === 'activity') {
+                    contentArea.innerHTML = `
+                        <div class="card text-center" style="padding: 50px;">
+                            <span style="font-size:48px;">🔒</span>
+                            <h2>Immutable Activity Log</h2>
+                            <div style="background: #f8fafc; border: 1px solid var(--border); padding: 30px; border-radius: 12px; margin-top: 20px; display: inline-block;">
+                                <p style="font-size:24px; font-weight:600; color:var(--primary); margin:0 0 10px 0;">"${data.activity.action}"</p>
+                                <p class="text-muted" style="font-size:18px;">Recorded on: <strong>${data.activity.time}</strong></p>
+                            </div>
+                            <p class="mt-2 text-muted">This log is cryptographically secured in the MedMe Audit Database for compliance and cannot be altered.</p>
+                        </div>
+                    `;
+                }
+                else if (type.startsWith('all_')) {
+                    let title = type.replace('all_', '').toUpperCase();
+                    let html = `<h2>${title} DIRECTORY</h2><div class="grid grid-3 mt-2">`;
+                    data.list.forEach(i => {
+                        let singleType = type.replace('all_','').replace(/s$/, '');
+                        if (singleType === 'scan') singleType = 'activity';
+
+                        let display = '';
+                        if(i.name) display = `<h3 style="color:var(--primary)">${i.name}</h3><p class="text-muted" style="font-size:13px;">${i.email || i.specialization || i.dob}</p>`;
+                        else if(i.medication) display = `<h3 style="color:var(--primary)">💊 ${i.medication}</h3><p class="text-muted" style="font-size:13px;">Patient: ${i.patient_name}</p>`;
+                        else if(i.diagnosis) display = `<h3 style="color:var(--primary)">🩺 ${i.diagnosis}</h3><p class="text-muted" style="font-size:13px;">Patient: ${i.patient_name}</p>`;
+                        else if(i.action) display = `<h3>⚡ Action Log</h3><p style="font-size:13px;">${i.action}</p><p class="text-muted" style="font-size:12px;">${i.time}</p>`;
+                        
+                        html += `<div class="card clickable-card" onclick="window.location.href='/viewer.html?type=${singleType}&id=${i.id}'">${display}</div>`;
+                    });
+                    html += `</div>`;
+                    contentArea.innerHTML = html;
+                }
+
+            } catch(e) {
+                contentArea.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+            }
+        }
+        loadView();
+    </script>
+</body>
+</html>

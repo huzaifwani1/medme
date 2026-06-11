@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MedMe - Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="auth-layout">
+        <div class="auth-left">
+            <div>
+                <h1 style="font-size: 48px; margin-bottom: 20px;">MedMe</h1>
+                <p style="font-size: 18px; opacity: 0.9;">The Complete Family Healthcare Ecosystem.</p>
+                <div style="margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: var(--radius); text-align: left; font-size: 14px;">
+                    <h3 style="margin-bottom: 10px;">Presentation Resources:</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                        <button class="btn" style="background: var(--success); color: white; font-weight: 600; border: none; text-align: center; cursor: pointer;" onclick="window.location.href='/how-it-works.html'">🚀 Start Live Demo Walkthrough</button>
+                        <a href="/analytics.html" class="btn" style="background: white; color: var(--primary); text-decoration: none; text-align: center;">📈 Global Analytics Dashboard</a>
+                        <a href="/qr-demo.html" class="btn" style="background: white; color: var(--primary); text-decoration: none; text-align: center;">📱 QR Scanning Demo Center</a>
+                        <a href="/demo-data.html" class="btn" style="background: transparent; border: 1px solid white; color: white; text-decoration: none; text-align: center;">📊 Browse All Patient Records</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="auth-right">
+            <div class="auth-card">
+                <div id="alertBox" class="alert hidden"></div>
+                
+                <!-- Login Form -->
+                <div id="loginForm">
+                    <h2 class="mb-2 text-center">Welcome Back</h2>
+                    <form onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="loginEmail" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="loginPassword" class="form-control" value="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%">Sign In</button>
+                    </form>
+                    
+                    <div class="mt-2 text-left text-muted" style="font-size: 13px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                        <strong style="display: block; margin-bottom: 8px; text-align: center;">🎓 1-Click Presentation Logins</strong>
+                        <div class="grid grid-2" style="gap: 5px;">
+                            <button class="btn btn-outline" style="padding: 5px; font-size: 12px;" onclick="fillLogin('ayaan@medme.com', 'password')">Patient: Ayaan</button>
+                            <button class="btn btn-outline" style="padding: 5px; font-size: 12px;" onclick="fillLogin('faisal@medme.com', 'password')">Doctor: Faisal</button>
+                            <button class="btn btn-outline" style="padding: 5px; font-size: 12px; grid-column: span 2;" onclick="fillLogin('admin@medme.com', 'admin123')">Hospital Admin Dashboard</button>
+                        </div>
+                    </div>
+
+                    <p class="text-center mt-2" style="font-size: 14px;">
+                        Don't have an account? <br><br>
+                        <a href="#" onclick="showForm('registerPatient')" style="color: var(--primary); text-decoration: none; font-weight: 500;">Register as Patient</a> &nbsp;|&nbsp; 
+                        <a href="#" onclick="showForm('registerDoctor')" style="color: var(--primary); text-decoration: none; font-weight: 500;">Register as Doctor</a>
+                    </p>
+                </div>
+
+                <!-- Patient Register Form -->
+                <div id="registerPatientForm" class="hidden">
+                    <h2 class="mb-2 text-center">Patient Registration</h2>
+                    <form onsubmit="handleRegister(event, 'patient')">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="pName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="pEmail" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="pPassword" class="form-control" required minlength="6">
+                        </div>
+                        <div class="grid grid-2" style="gap: 15px;">
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="date" id="pDob" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Blood Group</label>
+                                <select id="pBlood" class="form-control">
+                                    <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                                    <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2" style="width: 100%">Register & Generate QR</button>
+                    </form>
+                    <p class="text-center mt-2" style="font-size: 14px;"><a href="#" onclick="showForm('login')" style="color: var(--text-muted); text-decoration: none;">Back to Login</a></p>
+                </div>
+
+                <!-- Doctor Register Form -->
+                <div id="registerDoctorForm" class="hidden">
+                    <h2 class="mb-2 text-center">Doctor Registration</h2>
+                    <form onsubmit="handleRegister(event, 'doctor')">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="dName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="dEmail" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="dPassword" class="form-control" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>Specialization</label>
+                            <input type="text" id="dSpec" class="form-control" placeholder="e.g. Cardiologist" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2" style="width: 100%">Register as Doctor</button>
+                    </form>
+                    <p class="text-center mt-2" style="font-size: 14px;"><a href="#" onclick="showForm('login')" style="color: var(--text-muted); text-decoration: none;">Back to Login</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/js/auth.js"></script>
+    <script src="/js/tour.js"></script>
+    <script>
+        if(getToken() && localStorage.getItem('demoMode') !== 'true') {
+            const role = localStorage.getItem('role');
+            if(role === 'patient') window.location.href = '/patient.html';
+            else if(role === 'doctor') window.location.href = '/doctor.html';
+            else if(role === 'admin') window.location.href = '/admin.html';
+        }
+
+        function showForm(type) {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerPatientForm').classList.add('hidden');
+            document.getElementById('registerDoctorForm').classList.add('hidden');
+            document.getElementById('alertBox').classList.add('hidden');
+
+            if(type === 'login') document.getElementById('loginForm').classList.remove('hidden');
+            if(type === 'registerPatient') document.getElementById('registerPatientForm').classList.remove('hidden');
+            if(type === 'registerDoctor') document.getElementById('registerDoctorForm').classList.remove('hidden');
+        }
+
+        function showAlert(msg, isError = true) {
+            const box = document.getElementById('alertBox');
+            box.textContent = msg;
+            box.className = `alert ${isError ? 'alert-danger' : 'alert-success'}`;
+            box.classList.remove('hidden');
+        }
+
+        function fillLogin(email, password) {
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('loginPassword').value = password;
+            handleLogin(new Event('submit'));
+        }
+
+        async function handleLogin(e) {
+            if(e) e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email, password})
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.error);
+                
+                setAuth(data.token, data.role);
+                if(data.role === 'patient') window.location.href = '/patient.html';
+                else if(data.role === 'doctor') window.location.href = '/doctor.html';
+                else if(data.role === 'admin') window.location.href = '/admin.html';
+            } catch (err) {
+                showAlert(err.message);
+            }
+        }
+
+        async function handleRegister(e, role) {
+            e.preventDefault();
+            const payload = { role };
+            if(role === 'patient') {
+                payload.name = document.getElementById('pName').value;
+                payload.email = document.getElementById('pEmail').value;
+                payload.password = document.getElementById('pPassword').value;
+                payload.dob = document.getElementById('pDob').value;
+                payload.blood_group = document.getElementById('pBlood').value;
+            } else {
+                payload.name = document.getElementById('dName').value;
+                payload.email = document.getElementById('dEmail').value;
+                payload.password = document.getElementById('dPassword').value;
+                payload.specialization = document.getElementById('dSpec').value;
+            }
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.error);
+                
+                showAlert('Registration successful! You can now sign in.', false);
+                showForm('login');
+            } catch(err) {
+                showAlert(err.message);
+            }
+        }
+    </script>
+</body>
+</html>

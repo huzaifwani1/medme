@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MedMe - Hospital Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Hospital Command Center</div>
+        <div>
+            <span id="userName" style="margin-right: 20px; font-weight: 500;"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container mt-2">
+        <h2 style="margin-bottom: 20px;">Hospital Overview</h2>
+        <div class="grid" style="grid-template-columns: repeat(6, 1fr); gap: 15px; margin-bottom: 20px;">
+            <div class="card clickable-card text-center" style="border-top: 4px solid var(--primary); padding: 15px;" onclick="window.location.href='/viewer.html?type=all_patients'">
+                <h4 class="text-muted" style="font-weight: 500; font-size: 13px;">Patients</h4>
+                <h1 style="font-size: 28px; color: var(--primary);" id="statPatients">0</h1>
+            </div>
+            <div class="card clickable-card text-center" style="border-top: 4px solid var(--secondary); padding: 15px;" onclick="window.location.href='/viewer.html?type=all_doctors'">
+                <h4 class="text-muted" style="font-weight: 500; font-size: 13px;">Doctors</h4>
+                <h1 style="font-size: 28px; color: var(--secondary);" id="statDoctors">0</h1>
+            </div>
+            <div class="card clickable-card text-center" style="border-top: 4px solid var(--success); padding: 15px;" onclick="window.location.href='/viewer.html?type=all_records'">
+                <h4 class="text-muted" style="font-weight: 500; font-size: 13px;">Records</h4>
+                <h1 style="font-size: 28px; color: var(--success);" id="statRecords">0</h1>
+            </div>
+            <div class="card clickable-card text-center" style="border-top: 4px solid #f59e0b; padding: 15px;" onclick="window.location.href='/viewer.html?type=all_prescriptions'">
+                <h4 class="text-muted" style="font-weight: 500; font-size: 13px;">Rx Issued</h4>
+                <h1 style="font-size: 28px; color: #f59e0b;" id="statPrescriptions">0</h1>
+            </div>
+            <div class="card clickable-card text-center" style="border-top: 4px solid #8b5cf6; padding: 15px;">
+                <h4 class="text-muted" style="font-weight: 500; font-size: 13px;">Lab Reports</h4>
+                <h1 style="font-size: 28px; color: #8b5cf6;" id="statLabs">0</h1>
+            </div>
+            <div class="card clickable-card text-center" style="border-top: 4px solid #ec4899; padding: 15px;" onclick="window.location.href='/viewer.html?type=all_scans'">
+                <h4 class="text-muted" style="font-weight: 500; font-size: 13px;">QR Scans</h4>
+                <h1 style="font-size: 28px; color: #ec4899;" id="statScans">0</h1>
+            </div>
+        </div>
+
+        <div class="grid grid-2">
+            <!-- Users List -->
+            <div class="card">
+                <h3 class="card-header">Platform Users</h3>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Role</th><th>Name</th><th>Email</th></tr>
+                        </thead>
+                        <tbody id="usersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="card">
+                <h3 class="card-header">Recent Activities (Immutable Log)</h3>
+                <div style="background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; max-height: 400px; overflow-y: auto;">
+                    <table style="margin: 0; width: 100%;">
+                        <tbody id="activityTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/tour.js"></script>
+    <script>
+        requireAuth('admin');
+
+        async function init() {
+            const me = await fetchAPI('/me');
+            document.getElementById('userName').textContent = me.name;
+
+            const data = await fetchAPI('/admin/stats');
+            document.getElementById('statPatients').textContent = data.stats.patients;
+            document.getElementById('statDoctors').textContent = data.stats.doctors;
+            document.getElementById('statRecords').textContent = data.stats.records;
+            document.getElementById('statPrescriptions').textContent = data.stats.prescriptions;
+            document.getElementById('statLabs').textContent = data.stats.labs;
+            document.getElementById('statScans').textContent = data.stats.qr_scans;
+
+            const tbody = document.getElementById('usersTable');
+            tbody.innerHTML = data.users.map(u => `
+                <tr class="clickable-row" onclick="window.location.href='/viewer.html?type=${u.role==='patient'?'patient':(u.role==='doctor'?'doctor':'all_patients')}&id=${u.id}'">
+                    <td><strong>#${u.id}</strong></td>
+                    <td><span class="badge ${u.role === 'admin' ? 'badge-blue' : (u.role === 'doctor' ? 'badge-blue' : '')}" style="${u.role === 'patient' ? 'background: #f1f5f9; color: #475569;' : ''}">${u.role.toUpperCase()}</span></td>
+                    <td>${u.name}</td>
+                    <td><span style="color: var(--text-muted); font-size: 12px;">${u.email}</span></td>
+                </tr>
+            `).join('');
+
+            const actBody = document.getElementById('activityTable');
+            actBody.innerHTML = data.activities.map(a => `
+                <tr class="clickable-row" onclick="window.location.href='/viewer.html?type=activity&id=${a.id}'">
+                    <td style="padding: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong style="color: var(--text-main); font-size: 13px;">${a.action}</strong>
+                            <span class="badge" style="background: #e2e8f0; color: #64748b; font-size: 11px;">${a.time}</span>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        init();
+    </script>
+</body>
+</html>

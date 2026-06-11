@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MedMe - Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">MedMe Global Analytics Dashboard</div>
+        <div>
+            <a href="/" class="btn btn-primary">Back to Home</a>
+        </div>
+    </nav>
+    <div class="container mt-2">
+        <div class="grid grid-3">
+            <div class="card">
+                <h3 class="card-header">Disease Distribution Tracker</h3>
+                <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">Aggregated from family trees and clinical records.</p>
+                <div style="height: 250px; display: flex; justify-content: center;"><canvas id="diseaseChart"></canvas></div>
+            </div>
+            <div class="card">
+                <h3 class="card-header">Patient Demographics (Age)</h3>
+                <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">Breakdown of registered patients by age group.</p>
+                <div style="height: 250px; display: flex; justify-content: center;"><canvas id="ageChart"></canvas></div>
+            </div>
+            <div class="card">
+                <h3 class="card-header">Blood Group Statistics</h3>
+                <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">Distribution across the patient population.</p>
+                <div style="height: 250px; display: flex; justify-content: center;"><canvas id="bloodChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="grid grid-2 mt-2">
+            <div class="card">
+                <h3 class="card-header">Doctor Clinical Activity</h3>
+                <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">Number of medical records generated per physician.</p>
+                <div style="height: 300px; display: flex; justify-content: center;"><canvas id="docChart"></canvas></div>
+            </div>
+            <div class="card">
+                <h3 class="card-header">Most Prescribed Medications</h3>
+                <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">Top pharmacy items distributed system-wide.</p>
+                <div style="height: 300px; display: flex; justify-content: center;"><canvas id="medChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <script src="/js/tour.js"></script>
+    <script>
+        async function loadAnalytics() {
+            const res = await fetch('/api/analytics');
+            const data = await res.json();
+            
+            new Chart(document.getElementById('diseaseChart'), {
+                type: 'doughnut',
+                data: { labels: Object.keys(data.diseases), datasets: [{ data: Object.values(data.diseases), backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'] }] },
+                options: { maintainAspectRatio: false }
+            });
+
+            new Chart(document.getElementById('ageChart'), {
+                type: 'pie',
+                data: { labels: Object.keys(data.ages), datasets: [{ data: Object.values(data.ages), backgroundColor: ['#8b5cf6', '#ec4899', '#14b8a6', '#f97316'] }] },
+                options: { maintainAspectRatio: false }
+            });
+
+            new Chart(document.getElementById('bloodChart'), {
+                type: 'doughnut',
+                data: { labels: Object.keys(data.bloods), datasets: [{ data: Object.values(data.bloods), backgroundColor: ['#ef4444', '#fca5a5', '#dc2626', '#991b1b'] }] },
+                options: { maintainAspectRatio: false }
+            });
+
+            new Chart(document.getElementById('docChart'), {
+                type: 'bar',
+                data: { labels: data.docAct.map(d => 'Dr. ' + d.name), datasets: [{ label: 'Records Created', data: data.docAct.map(d => d.records_count), backgroundColor: '#3b82f6', borderRadius: 6 }] },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+
+            new Chart(document.getElementById('medChart'), {
+                type: 'bar',
+                data: { labels: Object.keys(data.meds), datasets: [{ label: 'Times Prescribed', data: Object.values(data.meds), backgroundColor: '#10b981', borderRadius: 6 }] },
+                options: { maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+        }
+        loadAnalytics();
+    </script>
+</body>
+</html>

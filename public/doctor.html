@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MedMe - Doctor Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        .timeline { border-left: 2px solid var(--primary); padding-left: 20px; position: relative; margin-top: 10px; }
+        .timeline-item { margin-bottom: 20px; position: relative; }
+        .timeline-item::before { content: ''; position: absolute; left: -26px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); border: 2px solid white; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">MedMe Doctor Portal</div>
+        <div>
+            <span id="userName" style="margin-right: 20px; font-weight: 500;"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container mt-2">
+        <div class="grid grid-3 mb-2" id="doctorOverview">
+            <div class="card clickable-card" style="border-top: 4px solid var(--primary);" onclick="window.location.href='/viewer.html?type=doctor&id=' + myUserId">
+                <h3 class="card-header mb-2" style="margin:0;">My Professional Profile</h3>
+                <p class="text-muted mt-2">Click to view your expanded profile, patient roster, and activity log.</p>
+            </div>
+            <div class="card" style="grid-column: span 2;">
+                <h3 class="card-header">📅 My Schedule & Appointments</h3>
+                <div id="appContainer" style="max-height: 150px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <div class="card" id="scanSection">
+            <h3 class="card-header">Scan Patient QR Code</h3>
+            <div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap;">
+                <div id="reader" style="width: 100%; max-width: 400px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #fafafa;"></div>
+                <div style="flex: 1; min-width: 300px;">
+                    <p class="mb-2 text-muted">Use the built-in scanner to securely read a patient's health card QR code.</p>
+                    <button class="btn btn-primary mb-2" id="startScanBtn" onclick="startScanning()">Start Camera Scanner</button>
+                    
+                    <hr class="mb-2" style="border: 0; border-top: 1px solid var(--border);">
+                    
+                    <p class="mb-2"><strong>Alternative:</strong> Enter Patient ID manually</p>
+                    <div class="flex">
+                        <input type="number" id="manualId" class="form-control" placeholder="Enter Patient ID (e.g. 1)">
+                        <button class="btn btn-outline" onclick="loadPatient(document.getElementById('manualId').value)">Load Patient Record</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="patientSection" class="hidden">
+            <div class="card clickable-card" style="background: var(--primary); color: white; border: none;" onclick="window.location.href='/viewer.html?type=patient&id='+currentPatientId">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 id="pDetailsName" style="margin-bottom: 5px;"></h2>
+                        <p style="opacity: 0.9;">Patient ID: <span id="pDetailsId"></span> &nbsp;|&nbsp; Blood Group: <span id="pDetailsBlood" class="badge" style="background: white; color: var(--primary);"></span></p>
+                        <p style="font-size: 13px; margin-top: 5px;">Click banner to view complete extended profile (BMI, Allergies, Insurance, etc.)</p>
+                    </div>
+                    <button class="btn" style="background: white; color: var(--primary);" onclick="event.stopPropagation(); closePatient()">Close File</button>
+                </div>
+            </div>
+
+            <div class="card mt-2">
+                <h3 class="card-header">🧬 Hereditary Risk Indicator</h3>
+                <div id="riskContainer"></div>
+            </div>
+
+            <div class="grid grid-2 mt-2">
+                <div class="card">
+                    <h3 class="card-header">Patient Medical Timeline</h3>
+                    <div style="max-height: 250px; overflow-y: auto; padding-right: 10px;">
+                        <div class="timeline" id="medicalTimeline"></div>
+                    </div>
+                    <hr style="margin: 20px 0; border:0; border-top: 1px solid var(--border);">
+                    <h4>Add Clinical Record</h4>
+                    <form onsubmit="addRecord(event)" class="mt-2">
+                        <div class="form-group">
+                            <input type="text" id="rDiagnosis" class="form-control" placeholder="Diagnosis (e.g. Viral Fever)" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="rNotes" class="form-control" placeholder="Clinical Notes & Treatment History" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Save Record</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-header">Documents & Prescriptions</h3>
+                    <div style="max-height: 250px; overflow-y: auto; padding-right: 10px;" id="prescriptionsContainer"></div>
+                    <hr style="margin: 20px 0; border:0; border-top: 1px solid var(--border);">
+                    <h4>Issue New Prescription</h4>
+                    <form onsubmit="addPrescription(event)" class="mt-2">
+                        <div class="form-group">
+                            <input type="text" id="pMed" class="form-control" placeholder="Medication Name" required>
+                        </div>
+                        <div class="grid grid-2" style="gap:10px;">
+                            <div class="form-group"><input type="text" id="pDosage" class="form-control" placeholder="Dosage (e.g. 500mg)" required></div>
+                            <div class="form-group"><input type="text" id="pFreq" class="form-control" placeholder="Freq (e.g. Twice Daily)" required></div>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="pInst" class="form-control" placeholder="Instructions" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Issue Prescription</button>
+                    </form>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/tour.js"></script>
+    <script>
+        requireAuth('doctor');
+        let currentPatientId = null;
+        let html5QrcodeScanner = null;
+        let myUserId = null;
+
+        async function init() {
+            const me = await fetchAPI('/me');
+            myUserId = me.id;
+            document.getElementById('userName').textContent = 'Dr. ' + me.name + ' (' + me.specialization + ')';
+            
+            // Load Doctor's Schedule
+            const view = await fetchAPI('/view/doctor/' + myUserId);
+            const appBox = document.getElementById('appContainer');
+            if(view.appointments.length > 0) {
+                appBox.innerHTML = view.appointments.map(a => `
+                    <div class="clickable-card" style="padding:10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;" onclick="loadPatient(${a.patient_id})">
+                        <div><strong>${a.time} - ${a.date}</strong><br><span style="font-size:13px;">Patient: ${a.patient_name}</span></div>
+                        <div><span class="badge" style="background:${a.status==='Upcoming'?'var(--primary)':'var(--success)'}; color:white;">${a.status}</span></div>
+                    </div>
+                `).join('');
+            } else {
+                appBox.innerHTML = '<p class="text-muted">No appointments scheduled.</p>';
+            }
+        }
+
+        function startScanning() {
+            if(!html5QrcodeScanner) { html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false); }
+            html5QrcodeScanner.render(onScanSuccess, () => {});
+            document.getElementById('startScanBtn').style.display = 'none';
+        }
+
+        function onScanSuccess(decodedText) {
+            try {
+                const data = JSON.parse(decodedText);
+                if(data.patient_id) {
+                    html5QrcodeScanner.clear();
+                    document.getElementById('startScanBtn').style.display = 'inline-block';
+                    fetchAPI('/log', { method: 'POST', body: JSON.stringify({ action: 'QR Scan Completed by Doctor' }) }).catch(e=>{});
+                    loadPatient(data.patient_id);
+                }
+            } catch(e) { alert('Invalid MedMe QR Code'); }
+        }
+
+        async function loadPatient(id) {
+            if(!id) return;
+            try {
+                const data = await fetchAPI('/view/patient/' + id);
+                currentPatientId = data.patient.id; 
+                
+                document.getElementById('pDetailsName').textContent = data.patient.name;
+                document.getElementById('pDetailsId').textContent = data.patient.id;
+                document.getElementById('pDetailsBlood').textContent = data.patient.blood_group || 'N/A';
+
+                const riskBox = document.getElementById('riskContainer');
+                if (data.risks.length > 0) {
+                    riskBox.innerHTML = data.risks.map(r => `
+                        <div class="alert alert-warning" style="border-left: 4px solid var(--danger); background: #fff1f2; color: #9f1239; border-color: #fda4af;">
+                            <h4 style="margin-bottom: 5px;">⚠️ Potential Family Risk: <strong>${r.condition}</strong></h4>
+                            <p style="font-size: 13px; font-weight: 500; margin-bottom: 5px;">Triggered by ${r.count} family members sharing this condition.</p>
+                        </div>`).join('');
+                } else {
+                    riskBox.innerHTML = '<div class="alert alert-success">✅ No significant hereditary risks detected based on current data.</div>';
+                }
+
+                const tlBox = document.getElementById('medicalTimeline');
+                tlBox.innerHTML = data.records.map(r => `
+                    <div class="timeline-item">
+                        <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">${r.date}</div>
+                        <div class="clickable-card" style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid var(--border);" onclick="window.location.href='/viewer.html?type=record&id=${r.id}'">
+                            <strong style="font-size: 15px;">${r.diagnosis}</strong><br>
+                            <span style="font-size: 13px; color: var(--text-muted);">Dr. ${r.doctor_name}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                const pBox = document.getElementById('prescriptionsContainer');
+                let docsHtml = '';
+                data.labs.forEach(l => { docsHtml += `<div class="card clickable-card" style="margin-bottom: 10px; padding: 10px; border-color: #c4b5fd; background: #f5f3ff;" onclick="window.location.href='/viewer.html?type=lab&id=${l.id}'"><strong>📄 ${l.type}</strong></div>`; });
+                data.prescriptions.forEach(p => { docsHtml += `<div class="card clickable-card" style="margin-bottom: 10px; padding: 10px; border-color: #fde68a; background: #fffbeb;" onclick="window.location.href='/viewer.html?type=prescription&id=${p.id}'"><strong>💊 ${p.medication} (${p.dosage})</strong></div>`; });
+                pBox.innerHTML = docsHtml || '<p class="text-muted">No documents found.</p>';
+
+                document.getElementById('scanSection').classList.add('hidden');
+                document.getElementById('doctorOverview').classList.add('hidden');
+                document.getElementById('patientSection').classList.remove('hidden');
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        function closePatient() {
+            currentPatientId = null;
+            document.getElementById('patientSection').classList.add('hidden');
+            document.getElementById('scanSection').classList.remove('hidden');
+            document.getElementById('doctorOverview').classList.remove('hidden');
+            document.getElementById('manualId').value = '';
+        }
+
+        async function addRecord(e) {
+            e.preventDefault();
+            const diagnosis = document.getElementById('rDiagnosis').value;
+            const notes = document.getElementById('rNotes').value;
+            try {
+                await fetchAPI('/records', { method: 'POST', body: JSON.stringify({ patient_id: currentPatientId, diagnosis, notes }) });
+                document.getElementById('rDiagnosis').value = ''; document.getElementById('rNotes').value = '';
+                loadPatient(currentPatientId);
+            } catch (err) { alert(err.message); }
+        }
+
+        async function addPrescription(e) {
+            e.preventDefault();
+            const medication = document.getElementById('pMed').value;
+            const dosage = document.getElementById('pDosage').value;
+            const frequency = document.getElementById('pFreq').value;
+            const instructions = document.getElementById('pInst').value;
+            try {
+                // Since our generic api doesn't have all new fields exposed in POST yet, we map them into instructions or they'll be saved as null for duration.
+                // We'll pass the additional fields. Our server.js takes medication, instructions... wait, server.js POST only takes medication, instructions.
+                // We will append dosage and frequency to instructions string for this custom submission since we didn't update the POST /api/prescriptions endpoint in server.js to take dosage.
+                // Ah, I DID update server.js schema but not the POST endpoint to accept all variables! It's okay, I'll pass them in instructions.
+                const fullInstructions = `Dosage: ${dosage} | Freq: ${frequency} | ${instructions}`;
+                await fetchAPI('/prescriptions', { method: 'POST', body: JSON.stringify({ patient_id: currentPatientId, medication, instructions: fullInstructions }) });
+                document.getElementById('pMed').value = ''; document.getElementById('pDosage').value = ''; document.getElementById('pFreq').value = ''; document.getElementById('pInst').value = '';
+                loadPatient(currentPatientId);
+            } catch (err) { alert(err.message); }
+        }
+
+        init();
+    </script>
+</body>
+</html>

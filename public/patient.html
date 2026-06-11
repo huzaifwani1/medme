@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MedMe - Patient Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .timeline { border-left: 2px solid var(--primary); padding-left: 20px; position: relative; margin-top: 10px; }
+        .timeline-item { margin-bottom: 20px; position: relative; }
+        .timeline-item::before { content: ''; position: absolute; left: -26px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); border: 2px solid white; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">MedMe Patient Profile</div>
+        <div>
+            <span id="userName" style="margin-right: 20px; font-weight: 500;"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container mt-2">
+        <div class="grid grid-3">
+            <div class="card text-center clickable-card" style="background: linear-gradient(to bottom right, #ffffff, #f8fafc);" onclick="window.location.href='/viewer.html?type=patient&id=' + myUserId">
+                <h3 class="card-header" style="justify-content: center;">QR Identity Card</h3>
+                <img id="qrCode" src="" alt="QR Code" style="width: 200px; height: 200px; margin: 10px auto; border: 4px solid var(--primary); border-radius: 8px;">
+                <h2 id="profileName" style="margin-top: 10px; color: var(--text-main);"></h2>
+                <p class="mt-2 text-muted">Click this card to view your complete, expanded health profile including BMI, allergies, and insurance data.</p>
+            </div>
+
+            <!-- Notifications Center -->
+            <div class="card" style="grid-column: span 2;">
+                <h3 class="card-header">🔔 Notification Center</h3>
+                <div id="notifContainer" style="max-height: 250px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <div class="grid grid-2 mt-2">
+            <!-- Medical Records Timeline -->
+            <div class="card">
+                <h3 class="card-header">Patient Medical Timeline</h3>
+                <div style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
+                    <div class="timeline" id="medicalTimeline"></div>
+                </div>
+            </div>
+
+            <!-- Documents & Prescriptions -->
+            <div class="card">
+                <h3 class="card-header">Documents & Prescriptions</h3>
+                <div style="max-height: 400px; overflow-y: auto; padding-right: 10px;" id="prescriptionsContainer">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-2">
+            <h3 class="card-header">Family Health Dashboard</h3>
+            <div class="grid grid-2">
+                <div>
+                    <div id="familyTreeVisual" style="background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; height: 100%;">
+                    </div>
+                </div>
+                <div style="padding: 20px; background: #fff; border: 1px dashed var(--border); border-radius: 8px;">
+                    <div id="riskContainer" style="margin-bottom: 20px;"></div>
+                    <h4 style="margin-bottom: 15px;">➕ Map a New Family Member</h4>
+                    <form onsubmit="addFamily(event)">
+                        <div class="form-group">
+                            <input type="text" id="fName" class="form-control" placeholder="Member Name" required>
+                        </div>
+                        <div class="form-group">
+                            <select id="fRelation" class="form-control" required>
+                                <option value="">Select Relation</option>
+                                <option>Father</option><option>Mother</option><option>Brother</option><option>Sister</option>
+                                <option>Grandfather</option><option>Grandmother</option><option>Uncle</option><option>Aunt</option><option>Child</option><option>Self</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="fCondition" class="form-control" placeholder="Condition (e.g. Diabetes, Hypertension, Healthy)" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Add to Health Tree</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/tour.js"></script>
+    <script>
+        requireAuth('patient');
+        let myUserId = null;
+
+        async function init() {
+            try {
+                const me = await fetchAPI('/me');
+                myUserId = me.id;
+                document.getElementById('userName').textContent = me.name;
+                document.getElementById('profileName').textContent = me.name;
+                document.getElementById('qrCode').src = me.qr_code;
+
+                await loadDashboard();
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadDashboard() {
+            // Using the massive universal view API for patient
+            const data = await fetchAPI('/view/patient/' + myUserId);
+            
+            // Notifications
+            const notifBox = document.getElementById('notifContainer');
+            if (data.notifications.length > 0) {
+                notifBox.innerHTML = data.notifications.map(n => `
+                    <div style="padding: 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;">
+                        <div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">${n.date}</div>
+                        <div>${n.message}</div>
+                    </div>
+                `).join('');
+            } else {
+                notifBox.innerHTML = '<p class="text-muted">No new notifications.</p>';
+            }
+
+            // Risk Box
+            const riskBox = document.getElementById('riskContainer');
+            if (data.risks.length > 0) {
+                riskBox.innerHTML = data.risks.map(r => `
+                    <div class="alert alert-warning" style="border-left: 4px solid var(--danger); background: #fff1f2; color: #9f1239; border-color: #fda4af;">
+                        <h4 style="margin-bottom: 5px;">⚠️ Risk Alert: <strong>${r.condition}</strong></h4>
+                        <p style="font-size: 12px;">Triggered by ${r.count} family members.</p>
+                    </div>`).join('');
+            } else {
+                riskBox.innerHTML = '<div class="alert alert-success">✅ No significant hereditary risks detected.</div>';
+            }
+
+            // Medical Timeline
+            const tlBox = document.getElementById('medicalTimeline');
+            tlBox.innerHTML = data.records.map(r => `
+                <div class="timeline-item">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">${r.date}</div>
+                    <div class="clickable-card" style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid var(--border);" onclick="window.location.href='/viewer.html?type=record&id=${r.id}'">
+                        <span class="badge" style="background: #e2e8f0; margin-bottom: 5px; display:inline-block;">${r.type}</span><br>
+                        <strong style="font-size: 15px;">${r.diagnosis}</strong><br>
+                        <span style="font-size: 13px; color: var(--text-muted);">Attending Doctor: Dr. ${r.doctor_name}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Documents & Prescriptions Combine
+            const pBox = document.getElementById('prescriptionsContainer');
+            let docsHtml = '';
+            
+            data.labs.forEach(l => {
+                docsHtml += `
+                    <div class="card clickable-card" style="margin-bottom: 10px; box-shadow: none; padding: 15px; border-color: #c4b5fd; background: #f5f3ff;" onclick="window.location.href='/viewer.html?type=lab&id=${l.id}'">
+                        <strong>📄 ${l.type}</strong>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">Date: ${l.date} | Uploaded by Dr. ${l.doctor_name}</div>
+                    </div>
+                `;
+            });
+
+            data.prescriptions.forEach(p => {
+                docsHtml += `
+                    <div class="card clickable-card" style="margin-bottom: 10px; box-shadow: none; padding: 15px; border-color: #fde68a; background: #fffbeb;" onclick="window.location.href='/viewer.html?type=prescription&id=${p.id}'">
+                        <strong>💊 ${p.medication} (${p.dosage})</strong>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">Date: ${p.date} | Dr. ${p.doctor_name}</div>
+                    </div>
+                `;
+            });
+            pBox.innerHTML = docsHtml || '<p class="text-muted">No documents available.</p>';
+
+            // Family Tree
+            const order = ['Grandfather', 'Grandmother', 'Father', 'Mother', 'Uncle', 'Aunt', 'Self', 'Brother', 'Sister', 'Child'];
+            let sorted = [...data.family].sort((a,b) => {
+                let idxA = order.indexOf(a.relation); if(idxA === -1) idxA = 99;
+                let idxB = order.indexOf(b.relation); if(idxB === -1) idxB = 99;
+                return idxA - idxB;
+            });
+            let tHtml = `<pre style="font-family: monospace; font-size: 15px; padding: 20px; margin: 0; line-height: 1.8;">\n`;
+            sorted.forEach((f, i) => {
+                tHtml += `<strong>${f.relation}</strong> <span style="color: ${f.condition.toLowerCase() === 'healthy' ? 'var(--success)' : (f.condition.toLowerCase().includes('observation') ? '#d97706' : 'var(--danger)')}">(${f.condition})</span>\n`;
+                if(i < sorted.length - 1) tHtml += `      │\n`;
+            });
+            tHtml += `</pre>`;
+            document.getElementById('familyTreeVisual').innerHTML = tHtml;
+        }
+
+        async function addFamily(e) {
+            e.preventDefault();
+            const name = document.getElementById('fName').value;
+            const relation = document.getElementById('fRelation').value;
+            const condition = document.getElementById('fCondition').value;
+            try {
+                await fetchAPI('/family', { method: 'POST', body: JSON.stringify({ name, relation, condition }) });
+                document.getElementById('fName').value = ''; document.getElementById('fRelation').value = ''; document.getElementById('fCondition').value = '';
+                loadDashboard();
+            } catch (err) { alert(err.message); }
+        }
+
+        init();
+    </script>
+</body>
+</html>

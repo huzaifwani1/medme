@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Demo Walkthrough - MedMe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .section-card { background: white; border-radius: 16px; padding: 40px; margin-bottom: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .section-title { font-size: 28px; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+        .flow-box { background: #f8fafc; border: 2px solid var(--primary); border-radius: 12px; padding: 20px; text-align: center; font-weight: 600; margin-bottom: 10px; }
+        .flow-arrow { text-align: center; font-size: 24px; color: var(--primary); margin-bottom: 10px; }
+        ul.benefits li { margin-bottom: 10px; padding-left: 25px; position: relative; }
+        ul.benefits li::before { content: '✓'; position: absolute; left: 0; color: var(--success); font-weight: bold; }
+    </style>
+</head>
+<body style="background: #f1f5f9;">
+    <nav class="navbar" style="position: sticky; top: 0; z-index: 100;">
+        <div class="logo">MedMe Complete Healthcare Ecosystem</div>
+        <div>
+            <a href="/" class="btn btn-primary">Exit Presentation</a>
+        </div>
+    </nav>
+
+    <div class="container mt-2">
+        
+        <div class="section-card" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; text-align: center;">
+            <h1 style="font-size: 48px; margin-bottom: 10px;">MedMe Live Walkthrough</h1>
+            <p style="font-size: 20px; opacity: 0.9;">A connected ecosystem solving fragmentation in modern family healthcare.</p>
+        </div>
+
+        <div class="grid grid-2">
+            <div class="section-card">
+                <h2 class="section-title" style="color: var(--danger);">1. The Problem Statement</h2>
+                <p>Currently, the healthcare system is highly fragmented:</p>
+                <ul class="mt-2" style="margin-left: 20px; line-height: 1.8;">
+                    <li>Medical records are scattered across different hospitals.</li>
+                    <li>Doctors lack access to comprehensive family medical histories.</li>
+                    <li>Hereditary diseases are often diagnosed too late because the familial link was never mathematically tracked.</li>
+                    <li>Patients carry physical files that can be lost or damaged.</li>
+                </ul>
+            </div>
+            <div class="section-card">
+                <h2 class="section-title" style="color: var(--success);">2. The MedMe Solution</h2>
+                <p>MedMe creates a unified, QR-based identity platform that acts as a <strong>single source of truth</strong>.</p>
+                <ul class="benefits mt-2" style="list-style: none;">
+                    <li>Universal Patient QR Identity Cards</li>
+                    <li>Centralized Lab Reports & Prescriptions</li>
+                    <li>Rule-based Hereditary Risk Detection</li>
+                    <li>Real-time Immutable Activity Logging</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title">3. The QR Workflow Experience</h2>
+            <div class="grid grid-2" style="align-items: center;">
+                <div>
+                    <div class="flow-box">Patient Registers & Identity Created</div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-box">Dynamic QR Code Automatically Generated</div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-box">Doctor Scans QR at Clinic via Built-in App</div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-box">Full Medical & Family History Instantly Loaded</div>
+                </div>
+                <div class="text-center">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=Presentation" style="border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1);">
+                    <p class="mt-2 text-muted">Scan Simulation available in the <a href="/qr-demo.html" style="color: var(--primary);">QR Demo Center</a>.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title">4. Intelligent Family Health Tracking</h2>
+            <p class="mb-2">MedMe connects family members into a digital <strong>Health Tree</strong>. It actively monitors for patterns in diagnoses across generations.</p>
+            <div style="background: #fff1f2; border: 1px solid #fda4af; padding: 25px; border-radius: 12px;">
+                <h3 style="color: #9f1239; margin-bottom: 15px;">⚠️ System Alert: Hereditary Risk Detected</h3>
+                <div class="grid grid-2">
+                    <div>
+                        <p><strong>Condition:</strong> Diabetes</p>
+                        <p class="mt-2"><strong>Reason for Alert:</strong></p>
+                        <ul style="margin-left: 20px; font-size: 14px; margin-top: 5px;">
+                            <li>Grandfather was diagnosed with Diabetes.</li>
+                            <li>Father was diagnosed with Diabetes.</li>
+                        </ul>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; font-size: 13px; border: 1px solid #fda4af;">
+                        <strong>Action Recommended:</strong> <br>
+                        The system automatically flags this during the doctor's scan, prompting early screening for the patient (e.g., HbA1c Lab Test) before severe symptoms appear.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-2">
+            <div class="section-card">
+                <h2 class="section-title">5. Doctor & Patient Workflows</h2>
+                <h4 class="mb-2">For Doctors:</h4>
+                <ul class="benefits" style="list-style: none;">
+                    <li>Scan patients instantly without paperwork.</li>
+                    <li>Access historical Lab Reports & Scans.</li>
+                    <li>Manage upcoming appointments.</li>
+                </ul>
+                <h4 class="mt-2 mb-2">For Patients:</h4>
+                <ul class="benefits" style="list-style: none;">
+                    <li>Carry only a QR code.</li>
+                    <li>View immutable timeline of all visits.</li>
+                    <li>Receive automated notifications.</li>
+                </ul>
+            </div>
+            <div class="section-card">
+                <h2 class="section-title">6. Future Scope & Scalability</h2>
+                <p>Because the MedMe ecosystem is built on a scalable REST API with JWT Auth and a structured SQL schema, it is ready to integrate with:</p>
+                <ul class="mt-2" style="margin-left: 20px; line-height: 1.8;">
+                    <li>National Identity Systems.</li>
+                    <li>Pharmacy API networks for direct prescription fulfillment.</li>
+                    <li>Machine Learning modules for predictive analytics on the massive anonymized data sets currently viewed in the Analytics Dashboard.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="text-center mb-2">
+            <button class="btn btn-primary" style="padding: 15px 30px; font-size: 18px;" onclick="window.location.href='/'">End Presentation & Return Home</button>
+        </div>
+    </div>
+    <script src="/js/tour.js"></script>
+</body>
+</html>
