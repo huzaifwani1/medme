@@ -1,0 +1,363 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "role": "admin",
+      "email": "admin@medme.com",
+      "password": "$2a$10$tAJLctFKW8Db6ps2YZFWJeyG/Ue100ufnBFxsDyzVl3s0TbJi5urK",
+      "name": "System Admin"
+    },
+    {
+      "id": 2,
+      "role": "doctor",
+      "email": "ahmed@medme.com",
+      "password": "$2a$10$aVeN14MGFPaAiNwagn7h6evj9z8wPtzEua0Qh6QibaWSor0atWQ9S",
+      "name": "Dr. Ahmed Mir"
+    },
+    {
+      "id": 3,
+      "role": "doctor",
+      "email": "sana@medme.com",
+      "password": "$2a$10$aVeN14MGFPaAiNwagn7h6evj9z8wPtzEua0Qh6QibaWSor0atWQ9S",
+      "name": "Dr. Sana Bhat"
+    },
+    {
+      "id": 4,
+      "role": "doctor",
+      "email": "faisal@medme.com",
+      "password": "$2a$10$aVeN14MGFPaAiNwagn7h6evj9z8wPtzEua0Qh6QibaWSor0atWQ9S",
+      "name": "Dr. Faisal Lone"
+    },
+    {
+      "id": 5,
+      "role": "patient",
+      "email": "ayaan@medme.com",
+      "password": "$2a$10$aVeN14MGFPaAiNwagn7h6evj9z8wPtzEua0Qh6QibaWSor0atWQ9S",
+      "name": "Ayaan Khan"
+    },
+    {
+      "id": 6,
+      "role": "patient",
+      "email": "sara@medme.com",
+      "password": "$2a$10$aVeN14MGFPaAiNwagn7h6evj9z8wPtzEua0Qh6QibaWSor0atWQ9S",
+      "name": "Sara Khan"
+    },
+    {
+      "id": 7,
+      "role": "patient",
+      "email": "ali@medme.com",
+      "password": "$2a$10$aVeN14MGFPaAiNwagn7h6evj9z8wPtzEua0Qh6QibaWSor0atWQ9S",
+      "name": "Ali Khan"
+    },
+    {
+      "id": 8,
+      "role": "patient",
+      "email": "fatima@medme.com",
+      "password": "$2a$10$aVeN14MGFPaAiNwagn7h6evj9z8wPtzEua0Qh6QibaWSor0atWQ9S",
+      "name": "Fatima Khan"
+    },
+    {
+      "id": 9,
+      "role": "patient",
+      "email": "omar@medme.com",
+      "password": "$2a$10$aVeN14MGFPaAiNwagn7h6evj9z8wPtzEua0Qh6QibaWSor0atWQ9S",
+      "name": "Omar Khan"
+    }
+  ],
+  "patients": [
+    {
+      "id": 1,
+      "user_id": 5,
+      "dob": "1995-05-15",
+      "gender": "Male",
+      "blood_group": "O+",
+      "height": "175cm",
+      "weight": "70kg",
+      "bmi": "22.8",
+      "address": "123 University Demo St",
+      "phone": "+1 234 567 8900",
+      "emergency_contact": "Ali Khan (Father) - +1 987 654 3210",
+      "allergies": "Penicillin, Peanuts",
+      "vaccinations": "COVID-19 (2 Doses), Hepatitis B",
+      "insurance": "MedLife Premium Plan A",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOQSURBVO3BQY4jRwADwcyC/v9leg8+8FRAQxqtx2CE+YOZfx1mymGmHGbKYaYcZsphphxmymGmHGbKYaYcZsphphxmymGmHGbKizepfFMSmkpLQlNpSbhReSIJNyrflIR3HGbKYaYcZsqLD0vCJ6l8kkpLwjcl4ZNUPukwUw4z5TBTXvwwlSeS8ElJaCpN5YkkfJLKE0n4SYeZcpgph5ny4pdLwo1KS8ITKk3lJgm/2WGmHGbKYaa8+OVUWhKeULlJQlNpSfg/OcyUw0w5zJQXPywJPykJN0loKi0JTaWptCR8UhL+Sw4z5TBTDjPlxYepfJNKS0JTaUloKi0JTeVGpSXhRuW/7DBTDjPlMFNevCkJf1MSmkpLQlP5piT8JoeZcpgph5ny4k0qLQk3Kt+kcpOEpvJEEppKS8KNSktCU3kiCe84zJTDTDnMlBdvSsJPSkJTaUloKk+otCQ0labSknCj8pOS8EmHmXKYKYeZYv7gg1SeSMKNSkvCO1RaEm5UnkjCEyo3SbhRaUl4x2GmHGbKYaa8+LIk3Ki0JDSVloQnkvCOJLxDpSWhqTSVmyR80mGmHGbKYaaYP/gglSeScKPSktBUWhKayk0SmsoTSbhRaUm4UWlJaCo3SXjHYaYcZsphppg/eINKS8KNSkvCEypPJOFGpSXhRqUl4R0qLQl/02GmHGbKYaaYP3iDyhNJuFF5IglN5SYJT6g8kYQblZskNJWWhKbSkvCOw0w5zJTDTHnxYUloKk2lJeEmCU3liSTcqHySyhNJaCo3Ki0Jn3SYKYeZcpgpL74sCU2lJaGp3Ki0JNyo3CThCZV3qLQkNJVvOsyUw0w5zBTzB7+YSkvCjUpLwhMqN0l4QuWJJPykw0w5zJTDTHnxJpVvSsKNyk0SmsoTSWgqNyotCZ+k0pLwjsNMOcyUw0x58WFJ+CSVT1JpSWgqLQnvSMI7kvBNh5lymCmHmfLih6k8kYRPSkJTeYfKjcpvdpgph5lymCkv/meScJOEpvJEEm5UbpLwDpWfdJgph5lymCkvfrkkNJWWhKbSktBUblRaEm6S0FRukvA3HWbKYaYcZsqLH5aEb0pCU7lReSIJN0loKjdJaCp/02GmHGbKYaa8+DCVb1L5JpV3JKGp3CThRuWTDjPlMFMOM8X8wcy/DjPlMFMOM+UwUw4z5TBTDjPlMFMOM+UwUw4z5TBTDjPlMFMOM+Ufq1mLIM1wSQ4AAAAASUVORK5CYII="
+    },
+    {
+      "id": 2,
+      "user_id": 6,
+      "dob": "1998-08-20",
+      "gender": "Female",
+      "blood_group": "A+",
+      "height": "160cm",
+      "weight": "55kg",
+      "bmi": "21.4",
+      "address": "124 University Demo St",
+      "phone": "+1 234 567 8901",
+      "emergency_contact": "Ayaan Khan",
+      "allergies": "None",
+      "vaccinations": "COVID-19",
+      "insurance": "MedLife Standard",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAN/SURBVO3BQY5jBxYDwcwH3f/KHC+84OoDglTl7gEjzD+Y+dcxU46ZcsyUY6YcM+WYKcdMOWbKMVOOmXLMlGOmHDPlmCnHTHnxIZXflISm8iQJT1Q+kYQnKr8pCZ84ZsoxU46Z8uLLkvBNKp9Q+ZMk4ZtUvumYKcdMOWbKix+m8o4kfFMSmkpLQlN5koRvUnlHEn7SMVOOmXLMlBd/uSS8IwlPktBUmsqTJPzNjplyzJRjprz4y6m0JDSVJ0loKi0JTaUl4f/JMVOOmXLMlBc/LAk/KQk/SaUl4ZuS8Cc5ZsoxU46Z8uLLVH6TSkvCkyQ0lZaEpvJEpSXhicqf7Jgpx0w5ZsqLDyXhv5SEptKS0FR+UxL+JsdMOWbKMVNefEilJeGJyk9KQlNpSXii8o4kNJWWhCcqLQlN5R1J+MQxU46ZcsyUF1+m0pLQkvBEpSWhqbQkfFMSmkpTaUl4ovKTkvBNx0w5ZsoxU178MpUnSWgqT1RaEt6h0pLwiSS8Q6WptCQ8UWlJ+MQxU46ZcsyUFx9KQlNpKi0JTaWptCS8Q6Ul4U+i0pLQVJrKkyR80zFTjplyzJQXH1JpSWgqT5LwRKUl4R0qLQktCU3lm1RaEt6RhKbSVFoSPnHMlGOmHDPF/IMPqHxTEn6TSkvCE5WWhE+otCT8l46ZcsyUY6a8+MOoPEnCE5UnSWhJeKLyRKUl4YnKO1RaEppKS8InjplyzJRjprz4siQ0lZaEptKS8ETlHUl4ovJNKu9IQlN5otKS8E3HTDlmyjFTXvxhVJ4koam8Q+VJEt6h8gmVloSm8puOmXLMlGOmmH/wF1NpSWgqT5LwDpUnSXiHyjuS8JOOmXLMlGOmvPiQym9KwjuS8ETlHUloKk9UWhK+SaUl4RPHTDlmyjFTXnxZEr5J5R0qLQlNpSWhqbQkfCIJn0jCbzpmyjFTjpny4oepvCMJn0jCT1J5ovI3O2bKMVOOmfLi/4xKS0JLQlN5RxKeqDxJwidUftIxU46ZcsyUF3+5JDxReZKEpvJEpSXhSRKaypMk/JeOmXLMlGOmvPhhSfgvJaGpNJV3JOFJEprKkyQ0lf/SMVOOmXLMlBdfpvKbVFoSmso3qXwiCU3lSRKeqHzTMVOOmXLMFPMPZv51zJRjphwz5Zgpx0w5ZsoxU46ZcsyUY6YcM+WYKcdMOWbKMVP+B5wHczg44jGyAAAAAElFTkSuQmCC"
+    },
+    {
+      "id": 3,
+      "user_id": 7,
+      "dob": "1965-02-10",
+      "gender": "Male",
+      "blood_group": "B+",
+      "height": "170cm",
+      "weight": "80kg",
+      "bmi": "27.6",
+      "address": "123 University Demo St",
+      "phone": "+1 234 567 8902",
+      "emergency_contact": "Ayaan Khan",
+      "allergies": "Sulfa Drugs",
+      "vaccinations": "Flu, COVID-19",
+      "insurance": "MedLife Senior",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAN6SURBVO3BQW4DRwADwe6B/v9lxocceFpgsZIcB6wyP5j512GmHGbKYaYcZsphphxmymGmHGbKYaYcZsphphxmymGmHGbKYaa8eEjlm5LQVH5TEq6ofFMSnjjMlMNMOcyUF2+WhHdSuSMJV1RaEprKJyXhnVTe6TBTDjPlMFNefJjKHUl4QqUloSXhiSS8k8odSfikw0w5zJTDTHnxxyXhikpLQlNpSWgqTeVKEv6yw0w5zJTDTHnxx6m0JFxRaUloKi0JTaUl4f/kMFMOM+UwU158WBI+KQlN5UoS7lBpSXinJPyXHGbKYaYcZsqLN1P5JpWWhKZyRaUloalcUWlJuKLyX3aYKYeZcpgpLx5Kwm9Kwh0q35SEv+QwUw4z5TBTXjyk0pJwReWbktBUWhKayh1JaCotCVdUWhKayh1JeOIwUw4z5TBTXjyUhKbSktCS0FRaEt5J5Y4kNJWm0pJwReWTkvBOh5lymCmHmfLiIZVPUrkjCS0JTaWptCTcodKScIdKU2lJuKLSkvDEYaYcZsphppgffJHKlSRcUbkjCU+oXEnCHSotCU3ljiS802GmHGbKYaa8eDOVloQnVO5IwhMq76TSknBHEppKU2lJeOIwUw4z5TBTzA8eUHkiCU2lJeGKypUkXFFpSbii0pLwhEpLwm86zJTDTDnMFPODB1TuSEJTuSMJV1SuJOEOlTuScEXlShKaSktCU2lJeOIwUw4z5TBTzA8eUGlJeEKlJaGptCQ8ofKbktBU7kjCOx1mymGmHGbKiw9TuZKEloSm0pLwhMqVJNyh8oRKS0JT+abDTDnMlMNMMT/4w1RaEprKlSTcoXIlCXeo3JGETzrMlMNMOcyUFw+pfFMSrqi0JFxRuSMJTeWKSkvCO6m0JDxxmCmHmXKYKS/eLAnvpHJHEq6otCQ0lZaEJ5LwRBK+6TBTDjPlMFNefJjKHUl4QuWTVK6o/GWHmXKYKYeZ8uJ/Jgl3qNyRhCsqV5LwhMonHWbKYaYcZsqLPy4JTeWOJDSVKyotCVeS0FSuJOE3HWbKYaYcZsqLD0vCNyXhikpTuSMJV5LQVK4koan8psNMOcyUw0x58WYq36TSkvBJKk8koalcScIVlXc6zJTDTDnMFPODmX8dZsphphxmymGmHGbKYaYcZsphphxmymGmHGbKYaYcZsphphxmyj8GDXkgV1NX/gAAAABJRU5ErkJggg=="
+    },
+    {
+      "id": 4,
+      "user_id": 8,
+      "dob": "1970-11-05",
+      "gender": "Female",
+      "blood_group": "O-",
+      "height": "155cm",
+      "weight": "65kg",
+      "bmi": "27.0",
+      "address": "123 University Demo St",
+      "phone": "+1 234 567 8903",
+      "emergency_contact": "Ali Khan",
+      "allergies": "Dust",
+      "vaccinations": "COVID-19",
+      "insurance": "MedLife Senior",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOCSURBVO3BO45jCxYDweSB9r/lnDaeQesCglT9GTAi/sLMf46ZcsyUY6YcM+WYKcdMOWbKMVOOmXLMlGOmHDPlmCnHTDlmyosPJeF3UmlJ+IRKS8I7VJ4k4XdS+cQxU46ZcsyUF1+m8k1J+ITKkyT8TirflIRvOmbKMVOOmfLihyXhHSq/k0pLwhOVb0rCO1R+0jFTjplyzJQX/ziVloR3JKGptCS0JDxR+ZcdM+WYKcdMefGPS0JTaUl4RxKaSktCU/l/csyUY6YcM+XFD1P5SSotCU3lHUloSWgq36TyNzlmyjFTjpny4suS8Dsloam0JDSVloSm0pLwJAlN5UkS/mbHTDlmyjFTXnxI5U9SeaLyJ6n8S46ZcsyUY6a8+FASmsqTJPwklZaEpvIkCe9QaUloKk+S0FRaEt6h8oljphwz5ZgpLz6k8g6VloSm8okkNJWWhKbyJAktCU3lSRJ+kso3HTPlmCnHTIm/8IEkfELlSRKayjuS8A6VloQnKp9IwhOVJ0loKp84ZsoxU46ZEn/hByXhEyotCU2lJaGpfCIJTaUloak8SUJTaUl4h8o3HTPlmCnHTHnxZUloKi0JTeVJEppKS0JTaUl4otKS8A6VJ0loKu9QaUloSWgqnzhmyjFTjpny4kNJaCqfSEJTeaLyDpWWhKbyJAlN5YnKkyQ0lScqP+mYKcdMOWbKiy9LwhOVJyotCU2lJaGpvEPlSRKeJKGpPEnCO5LQVFoSmsonjplyzJRjprz4MpVvUmlJ+KYkfFMS3qHSkvAkCU3lm46ZcsyUY6a8+GFJ+Jsk4YnKO5LwiSQ0lZaE3+mYKcdMOWZK/IV/WBKeqLQkNJV3JOGJyjuS8A6Vn3TMlGOmHDPlxYeS8DupPFF5otKS8A6VloQnSWgq35SEpvKJY6YcM+WYKS++TOWbkvBNSWgqLQlN5RMqn1D5nY6ZcsyUY6a8+GFJeIfK3ywJT5LwLztmyjFTjpny4v9cEppKS8I7VJ4k4YnKJ5Lwk46ZcsyUY6a8+MeptCQ8SUJTaUl4koSm8kSlJeGJyp90zJRjphwz5cUPU/mbJeEdKk9UWhKeqLQk/EnHTDlmyjFTXnxZEn6nJDSVloRvSsInVFoSnqg8ScI3HTPlmCnHTIm/MPOfY6YcM+WYKcdMOWbKMVOOmXLMlGOmHDPlmCnHTDlmyjFTjpnyPxA0fSjzOXaBAAAAAElFTkSuQmCC"
+    },
+    {
+      "id": 5,
+      "user_id": 9,
+      "dob": "2005-04-30",
+      "gender": "Male",
+      "blood_group": "AB+",
+      "height": "180cm",
+      "weight": "68kg",
+      "bmi": "20.9",
+      "address": "456 College Ave",
+      "phone": "+1 234 567 8904",
+      "emergency_contact": "Sara Khan",
+      "allergies": "None",
+      "vaccinations": "COVID-19, MMR",
+      "insurance": "Student Health",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOOSURBVO3BQW4kRwADwczC/P/L9B584KmAxoyklc0I8wcz/zrMlMNMOcyUw0w5zJTDTDnMlMNMOcyUw0w5zJTDTDnMlMNMOcyUF29S+U5JaCo3SXhC5Ykk3Kh8pyS84zBTDjPlMFNefFgSPknliSQ0lZaEn5SET1L5pMNMOcyUw0x58cVUnkjCO1RaEppKS8ITSfgklSeS8JUOM+UwUw4z5cUvl4Sm0lRaEm6S0FSayk0SfrPDTDnMlMNMefHLqbQkNJWm8kQSmkpLwn/JYaYcZsphprz4Ykn4Skm4SUJTaUloKk2lJeGTkvA3OcyUw0w5zJQXH6bynVRaEppKS0JTaUloKjcqLQk3Kn+zw0w5zJTDTHnxpiT8pCQ0lb9JEn6Tw0w5zJTDTHnxJpWWhBuV75SEpnKj8kQSmkpLwo1KS0JTeSIJ7zjMlMNMOcyUF98sCTcqLQlNpSWhqdwk4QmVptKScKPylZLwSYeZcpgph5li/uANKk8k4QmVloRPUmlJaCpPJOEJlZsk3Ki0JLzjMFMOM+UwU168KQlNpSXhRqUloSXhRuUmCZ+UhKbyhEpLQlNpKjdJ+KTDTDnMlMNMefEmlZaEptKS8ITKTRKayo1KS0JTeSIJNyotCU8koak0lZaEdxxmymGmHGaK+YM3qLQk3KjcJOEJlSeS0FRaEm5UWhLeodKS8JMOM+UwUw4z5cWHqTyRhBuVloSbJDSVmyTcqNyotCTcqDyh0pLQVFoS3nGYKYeZcpgpLz4sCU2lJaGp3CShqbQkNJUnVD5J5YkkNJUblZaETzrMlMNMOcyUFz8sCTcqn6Ryk4QnVN6h0pLQVL7TYaYcZsphppg/+MVUbpLQVFoSnlC5ScITKk8k4SsdZsphphxmyos3qXynJLwjCU3liSQ0lRuVloRPUmlJeMdhphxmymGmvPiwJHySyieptCQ0lZaEdyThHUn4ToeZcpgph5ny4oupPJGET1L5JJUbld/sMFMOM+UwU178zyShqTyRhBuVmyS8Q+UrHWbKYaYcZsqLXy4JNypNpSWhqdyotCTcJKGp3CThJx1mymGmHGbKiy+WhO+k8oTKE0m4SUJTuUlCU/lJh5lymCmHmfLiw1S+k0pLwo3KO1TekYSmcpOEG5VPOsyUw0w5zBTzBzP/OsyUw0w5zJTDTDnMlMNMOcyUw0w5zJTDTDnMlMNMOcyUw0w5zJR/ANXhekAtdyogAAAAAElFTkSuQmCC"
+    }
+  ],
+  "doctors": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "specialization": "General Physician",
+      "qualification": "MBBS, MD",
+      "experience": "15 Years",
+      "hospital_affiliation": "MedMe Central Hospital",
+      "photo": "https://ui-avatars.com/api/?name=Dr.%20Ahmed%20Mir&background=2563eb&color=fff"
+    },
+    {
+      "id": 2,
+      "user_id": 3,
+      "specialization": "Cardiologist",
+      "qualification": "MBBS, DM Cardiology",
+      "experience": "10 Years",
+      "hospital_affiliation": "MedMe Heart Institute",
+      "photo": "https://ui-avatars.com/api/?name=Dr.%20Sana%20Bhat&background=2563eb&color=fff"
+    },
+    {
+      "id": 3,
+      "user_id": 4,
+      "specialization": "Diabetologist",
+      "qualification": "MBBS, MD Endocrinology",
+      "experience": "12 Years",
+      "hospital_affiliation": "MedMe Central Hospital",
+      "photo": "https://ui-avatars.com/api/?name=Dr.%20Faisal%20Lone&background=2563eb&color=fff"
+    }
+  ],
+  "medical_records": [
+    {
+      "id": 1,
+      "patient_id": 5,
+      "doctor_id": 2,
+      "date": "2026-05-01",
+      "type": "General Checkup",
+      "diagnosis": "Viral Fever",
+      "notes": "Patient reported mild fever. Prescribed rest."
+    },
+    {
+      "id": 2,
+      "patient_id": 5,
+      "doctor_id": 4,
+      "date": "2026-05-15",
+      "type": "Specialist Visit",
+      "diagnosis": "Pre-Diabetes Screening",
+      "notes": "HbA1c levels slightly elevated. Prescribed lifestyle changes and Metformin."
+    },
+    {
+      "id": 3,
+      "patient_id": 5,
+      "doctor_id": 2,
+      "date": "2026-06-02",
+      "type": "Surgery",
+      "diagnosis": "Appendectomy",
+      "notes": "Minor surgical intervention. Recovery is smooth."
+    }
+  ],
+  "prescriptions": [
+    {
+      "id": 1,
+      "patient_id": 5,
+      "doctor_id": 4,
+      "date": "2026-05-15",
+      "medication": "Metformin",
+      "dosage": "500mg",
+      "frequency": "Twice a day",
+      "duration": "3 Months",
+      "instructions": "1 tablet daily after dinner",
+      "follow_up_date": "2026-09-15"
+    },
+    {
+      "id": 2,
+      "patient_id": 5,
+      "doctor_id": 2,
+      "date": "2026-05-01",
+      "medication": "Paracetamol",
+      "dosage": "650mg",
+      "frequency": "As needed",
+      "duration": "5 Days",
+      "instructions": "Take after meals for fever",
+      "follow_up_date": "None"
+    }
+  ],
+  "lab_reports": [
+    {
+      "id": 1,
+      "patient_id": 5,
+      "doctor_id": 2,
+      "date": "2026-05-01",
+      "type": "CBC Blood Test",
+      "result": "WBC slightly elevated (11,000/mcL). Indicates mild infection.",
+      "file_url": "report_cbc.pdf"
+    },
+    {
+      "id": 2,
+      "patient_id": 5,
+      "doctor_id": 4,
+      "date": "2026-05-15",
+      "type": "HbA1c Sugar Test",
+      "result": "Result: 5.9% (Pre-diabetic range)",
+      "file_url": "report_hba1c.pdf"
+    },
+    {
+      "id": 3,
+      "patient_id": 5,
+      "doctor_id": 3,
+      "date": "2026-06-02",
+      "type": "ECG Report",
+      "result": "Normal Sinus Rhythm",
+      "file_url": "report_ecg.pdf"
+    }
+  ],
+  "appointments": [
+    {
+      "id": 1,
+      "patient_id": 5,
+      "doctor_id": 2,
+      "date": "2026-05-01",
+      "time": "10:00 AM",
+      "status": "Completed"
+    },
+    {
+      "id": 2,
+      "patient_id": 5,
+      "doctor_id": 4,
+      "date": "2026-06-15",
+      "time": "02:30 PM",
+      "status": "Upcoming"
+    }
+  ],
+  "family_members": [
+    {
+      "id": 1,
+      "patient_id": 5,
+      "name": "Hassan Khan",
+      "relation": "Grandfather",
+      "condition": "Diabetes"
+    },
+    {
+      "id": 2,
+      "patient_id": 5,
+      "name": "Zoya Khan",
+      "relation": "Grandmother",
+      "condition": "Hypertension"
+    },
+    {
+      "id": 3,
+      "patient_id": 5,
+      "name": "Ali Khan",
+      "relation": "Father",
+      "condition": "Diabetes"
+    },
+    {
+      "id": 4,
+      "patient_id": 5,
+      "name": "Fatima Khan",
+      "relation": "Mother",
+      "condition": "Healthy"
+    },
+    {
+      "id": 5,
+      "patient_id": 5,
+      "name": "Ayaan Khan",
+      "relation": "Self",
+      "condition": "Pre-Diabetes"
+    }
+  ],
+  "activity_logs": [
+    {
+      "id": 1,
+      "action": "Patient Registered: Sara Khan",
+      "time": "6/11/26, 11:43 AM"
+    },
+    {
+      "id": 2,
+      "action": "Doctor Login: Dr. Sana Bhat",
+      "time": "6/11/26, 11:43 AM"
+    },
+    {
+      "id": 3,
+      "action": "QR Scan Completed for Ali Khan",
+      "time": "6/11/26, 11:43 AM"
+    },
+    {
+      "id": 4,
+      "action": "Lab Report Uploaded: HbA1c",
+      "time": "6/11/26, 11:43 AM"
+    },
+    {
+      "id": 5,
+      "action": "Prescription Issued: Metformin",
+      "time": "6/11/26, 11:43 AM"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "user_id": 5,
+      "message": "Your HbA1c Lab Report has been uploaded by Dr. Faisal Lone.",
+      "date": "6/11/26, 11:43 AM"
+    },
+    {
+      "id": 2,
+      "user_id": 5,
+      "message": "Upcoming Appointment Reminder: Tomorrow at 02:30 PM with Dr. Faisal Lone.",
+      "date": "6/11/26, 11:43 AM"
+    }
+  ]
+}
